@@ -521,13 +521,37 @@ async def buyorders(interaction: discord.Interaction, item: str = None, buyer: s
                         await asyncio.sleep(0.5)
 
         items_per_page = 10
-        num_pages = (len(all_items) + items_per_page - 1) // items_per_page
         current_page = 0
+        sort_mode = "default"  # Default sort mode
+        
+        # Create a copy of all_items for sorting
+        sorted_items = list(all_items)
+        
+        def sort_items(mode):
+            nonlocal sorted_items
+            # Create a fresh copy of the original items
+            sorted_items = list(all_items)
+            
+            if mode == "price_low_high":
+                # Sort by price (low to high)
+                sorted_items.sort(key=lambda x: x.get("price", 0))
+            elif mode == "price_high_low":
+                # Sort by price (high to low)
+                sorted_items.sort(key=lambda x: x.get("price", 0), reverse=True)
+            # Default mode uses the original order from the API
+            
+            return sorted_items
+
+        # Initial sort with default mode
+        sorted_items = sort_items(sort_mode)
+        
+        # Calculate number of pages based on sorted items
+        num_pages = (len(sorted_items) + items_per_page - 1) // items_per_page
 
         async def update_embed(page: int):
             start_index = page * items_per_page
-            end_index = min(start_index + items_per_page, len(all_items))
-            items = all_items[start_index:end_index]
+            end_index = min(start_index + items_per_page, len(sorted_items))
+            items = sorted_items[start_index:end_index]
 
             title = "Buy Orders"
             if buyer_name and item:
@@ -588,8 +612,18 @@ async def buyorders(interaction: discord.Interaction, item: str = None, buyer: s
                         inline=False
                     )
 
-            if len(all_items) > items_per_page:
-                embed.set_footer(text=f"Page {current_page + 1} of {num_pages}")
+            # Add sort mode to footer
+            sort_text = "Default Order"
+            if sort_mode == "price_low_high":
+                sort_text = "Price: Low to High"
+            elif sort_mode == "price_high_low":
+                sort_text = "Price: High to Low"
+                
+            footer_text = f"Sort: {sort_text}"
+            if len(sorted_items) > items_per_page:
+                footer_text += f" | Page {current_page + 1} of {num_pages}"
+                
+            embed.set_footer(text=footer_text)
             return embed
 
         async def button_callback(interaction: discord.Interaction, page_num: int):
@@ -598,40 +632,75 @@ async def buyorders(interaction: discord.Interaction, item: str = None, buyer: s
             embed = await update_embed(current_page)
             
             # Update the buttons when page changes
+            await update_view_and_send(interaction, "edit")
+
+        async def sort_callback(interaction: discord.Interaction, new_sort_mode: str):
+            nonlocal sort_mode, current_page, num_pages, sorted_items
+            
+            # Update sort mode
+            sort_mode = new_sort_mode
+            logger.info(f"Sorting changed to: {sort_mode}")
+            
+            # Reset to first page
+            current_page = 0
+            
+            # Sort items again
+            sorted_items = sort_items(sort_mode)
+            
+            # Recalculate pages
+            num_pages = (len(sorted_items) + items_per_page - 1) // items_per_page
+            
+            # Update embed
+            embed = await update_embed(current_page)
+            
+            # Update view and send
+            await update_view_and_send(interaction, "edit")
+            
+        async def update_view_and_send(interaction: discord.Interaction, action="send"):
+            # Create new view
+            view = discord.ui.View(timeout=120)
+            
+            # Add sort dropdown
+            sort_dropdown = discord.ui.Select(
+                placeholder="Sort by...",
+                options=[
+                    discord.SelectOption(label="Default Order", value="default", default=(sort_mode == "default")),
+                    discord.SelectOption(label="Price: Low to High", value="price_low_high", default=(sort_mode == "price_low_high")),
+                    discord.SelectOption(label="Price: High to Low", value="price_high_low", default=(sort_mode == "price_high_low"))
+                ],
+                min_values=1,
+                max_values=1
+            )
+            
+            sort_dropdown.callback = lambda i: sort_callback(i, sort_dropdown.values[0])
+            view.add_item(sort_dropdown)
+            
+            # Add pagination buttons
             prev_button_disabled = (current_page == 0)
             next_button_disabled = (current_page >= num_pages - 1)
             
-            # Recreate view with updated button states
-            view = discord.ui.View(timeout=60)
-            prev_button = discord.ui.Button(label="Previous", style=discord.ButtonStyle.secondary, disabled=prev_button_disabled)
-            next_button = discord.ui.Button(label="Next", style=discord.ButtonStyle.secondary, disabled=next_button_disabled)
+            prev_page_button = discord.ui.Button(label="Previous", style=discord.ButtonStyle.secondary, disabled=prev_button_disabled, row=1)
+            next_page_button = discord.ui.Button(label="Next", style=discord.ButtonStyle.secondary, disabled=next_button_disabled, row=1)
+
+            prev_page_button.callback = lambda i: button_callback(i, max(0, current_page - 1))
+            next_page_button.callback = lambda i: button_callback(i, min(num_pages - 1, current_page + 1))
+
+            # Add buttons to view
+            view.add_item(prev_page_button)
+            view.add_item(next_page_button)
+            view.timeout = 120  # Set timeout to 120 seconds
             
-            prev_button.callback = lambda i: button_callback(i, max(0, current_page - 1))
-            next_button.callback = lambda i: button_callback(i, min(num_pages - 1, current_page + 1))
+            # Create embed
+            embed = await update_embed(current_page)
             
-            view.add_item(prev_button)
-            view.add_item(next_button)
-            
-            await interaction.response.edit_message(embed=embed, view=view)
+            # Send or edit message
+            if action == "send":
+                await interaction.followup.send(embed=embed, view=view)
+            else:
+                await interaction.response.edit_message(embed=embed, view=view)
 
-        # Create initial buttons with proper disabled states
-        prev_button_disabled = (current_page == 0)
-        next_button_disabled = (current_page >= num_pages - 1)
-        
-        view = discord.ui.View(timeout=60)
-        prev_page_button = discord.ui.Button(label="Previous", style=discord.ButtonStyle.secondary, disabled=prev_button_disabled)
-        next_page_button = discord.ui.Button(label="Next", style=discord.ButtonStyle.secondary, disabled=next_button_disabled)
-
-        prev_page_button.callback = lambda i: button_callback(i, max(0, current_page - 1))
-        next_page_button.callback = lambda i: button_callback(i, min(num_pages - 1, current_page + 1))
-
-        # Add buttons to view
-        view.add_item(prev_page_button)
-        view.add_item(next_page_button)
-        view.timeout = 60  # Set timeout to 60 seconds
-
-        embed = await update_embed(current_page)
-        await interaction.followup.send(embed=embed, view=view)
+        # Initial send
+        await update_view_and_send(interaction, "send")
         
 @client.tree.command(name="sales", description="Lists active sales from the Loka Market.")
 @app_commands.describe(
@@ -899,13 +968,37 @@ async def sales(interaction: discord.Interaction, item: str = None, seller: str 
                             await asyncio.sleep(0.5)
 
             items_per_page = 10
-            num_pages = (len(all_items) + items_per_page - 1) // items_per_page
             current_page = 0
+            sort_mode = "default"  # Default sort mode
+            
+            # Create a copy of all_items for sorting
+            sorted_items = list(all_items)
+            
+            def sort_items(mode):
+                nonlocal sorted_items
+                # Create a fresh copy of the original items
+                sorted_items = list(all_items)
+                
+                if mode == "price_low_high":
+                    # Sort by price (low to high)
+                    sorted_items.sort(key=lambda x: x.get("price", 0))
+                elif mode == "price_high_low":
+                    # Sort by price (high to low)
+                    sorted_items.sort(key=lambda x: x.get("price", 0), reverse=True)
+                # Default mode uses the original order from the API
+                
+                return sorted_items
+
+            # Initial sort with default mode
+            sorted_items = sort_items(sort_mode)
+            
+            # Calculate number of pages based on sorted items
+            num_pages = (len(sorted_items) + items_per_page - 1) // items_per_page
 
             async def update_embed(page: int):
                 start_index = page * items_per_page
-                end_index = min(start_index + items_per_page, len(all_items))
-                items = all_items[start_index:end_index]
+                end_index = min(start_index + items_per_page, len(sorted_items))
+                items = sorted_items[start_index:end_index]
 
                 title = "Market Sales"
                 if seller_name and item:
@@ -966,8 +1059,18 @@ async def sales(interaction: discord.Interaction, item: str = None, seller: str 
                             inline=False
                         )
 
-                if len(all_items) > items_per_page:
-                    embed.set_footer(text=f"Page {current_page + 1} of {num_pages}")
+                # Add sort mode to footer
+                sort_text = "Default Order"
+                if sort_mode == "price_low_high":
+                    sort_text = "Price: Low to High"
+                elif sort_mode == "price_high_low":
+                    sort_text = "Price: High to Low"
+                    
+                footer_text = f"Sort: {sort_text}"
+                if len(sorted_items) > items_per_page:
+                    footer_text += f" | Page {current_page + 1} of {num_pages}"
+                    
+                embed.set_footer(text=footer_text)
                 return embed
 
             async def button_callback(interaction: discord.Interaction, page_num: int):
@@ -976,39 +1079,75 @@ async def sales(interaction: discord.Interaction, item: str = None, seller: str 
                 embed = await update_embed(current_page)
                 
                 # Update the buttons when page changes
+                await update_view_and_send(interaction, "edit")
+
+            async def sort_callback(interaction: discord.Interaction, new_sort_mode: str):
+                nonlocal sort_mode, current_page, num_pages, sorted_items
+                
+                # Update sort mode
+                sort_mode = new_sort_mode
+                logger.info(f"Sorting changed to: {sort_mode}")
+                
+                # Reset to first page
+                current_page = 0
+                
+                # Sort items again
+                sorted_items = sort_items(sort_mode)
+                
+                # Recalculate pages
+                num_pages = (len(sorted_items) + items_per_page - 1) // items_per_page
+                
+                # Update embed
+                embed = await update_embed(current_page)
+                
+                # Update view and send
+                await update_view_and_send(interaction, "edit")
+                
+            async def update_view_and_send(interaction: discord.Interaction, action="send"):
+                # Create new view
+                view = discord.ui.View(timeout=120)
+                
+                # Add sort dropdown
+                sort_dropdown = discord.ui.Select(
+                    placeholder="Sort by...",
+                    options=[
+                        discord.SelectOption(label="Default Order", value="default", default=(sort_mode == "default")),
+                        discord.SelectOption(label="Price: Low to High", value="price_low_high", default=(sort_mode == "price_low_high")),
+                        discord.SelectOption(label="Price: High to Low", value="price_high_low", default=(sort_mode == "price_high_low"))
+                    ],
+                    min_values=1,
+                    max_values=1
+                )
+                
+                sort_dropdown.callback = lambda i: sort_callback(i, sort_dropdown.values[0])
+                view.add_item(sort_dropdown)
+                
+                # Add pagination buttons
                 prev_button_disabled = (current_page == 0)
                 next_button_disabled = (current_page >= num_pages - 1)
                 
-                # Recreate view with updated button states
-                view = discord.ui.View(timeout=60)
-                prev_button = discord.ui.Button(label="Previous", style=discord.ButtonStyle.secondary, disabled=prev_button_disabled)
-                next_button = discord.ui.Button(label="Next", style=discord.ButtonStyle.secondary, disabled=next_button_disabled)
+                prev_page_button = discord.ui.Button(label="Previous", style=discord.ButtonStyle.secondary, disabled=prev_button_disabled, row=1)
+                next_page_button = discord.ui.Button(label="Next", style=discord.ButtonStyle.secondary, disabled=next_button_disabled, row=1)
+
+                prev_page_button.callback = lambda i: button_callback(i, max(0, current_page - 1))
+                next_page_button.callback = lambda i: button_callback(i, min(num_pages - 1, current_page + 1))
+
+                # Add buttons to view
+                view.add_item(prev_page_button)
+                view.add_item(next_page_button)
+                view.timeout = 120  # Set timeout to 120 seconds
                 
-                prev_button.callback = lambda i: button_callback(i, max(0, current_page - 1))
-                next_button.callback = lambda i: button_callback(i, min(num_pages - 1, current_page + 1))
+                # Create embed
+                embed = await update_embed(current_page)
                 
-                view.add_item(prev_button)
-                view.add_item(next_button)
-                
-                await interaction.response.edit_message(embed=embed, view=view)
+                # Send or edit message
+                if action == "send":
+                    await interaction.followup.send(embed=embed, view=view)
+                else:
+                    await interaction.response.edit_message(embed=embed, view=view)
 
-            # Create initial buttons with proper disabled states
-            prev_button_disabled = (current_page == 0)
-            next_button_disabled = (current_page >= num_pages - 1)
-            
-            view = discord.ui.View(timeout=60)
-            prev_page_button = discord.ui.Button(label="Previous", style=discord.ButtonStyle.secondary, disabled=prev_button_disabled)
-            next_page_button = discord.ui.Button(label="Next", style=discord.ButtonStyle.secondary, disabled=next_button_disabled)
-
-            prev_page_button.callback = lambda i: button_callback(i, max(0, current_page - 1))
-            next_page_button.callback = lambda i: button_callback(i, min(num_pages - 1, current_page + 1))
-
-            # Add buttons to view
-            view.add_item(prev_page_button)
-            view.add_item(next_page_button)
-
-            embed = await update_embed(current_page)
-            await interaction.followup.send(embed=embed, view=view)
+            # Initial send
+            await update_view_and_send(interaction, "send")
             
     except Exception as e:
         logger.error(f"Error in sales command: {e}")
