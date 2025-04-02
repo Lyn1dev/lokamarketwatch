@@ -1,0 +1,663 @@
+{
+  "players": {
+    "5f270cb047541b0f050137e8": {
+      "id": "5f270cb047541b0f050137e8",
+      "identityId": "5f270cb047541b0f050137e8",
+      "name": null,
+      "rank": "Settler",
+      "uuid": "a7dca40e-d33c-43d0-a833-4072203f5aef",
+      "discordId": null,
+      "town": null,
+      "rankedStats": {
+        "barebones": {},
+        "pot": {}
+      },
+      "_links": {
+        "self": {
+          "href": "http://api.lokamc.com/players/5f270cb047541b0f050137e8"
+        },
+        "player": {
+          "href": "http://api.lokamc.com/players/5f270cb047541b0f050137e8"
+        }
+      }
+    },
+    "621a86c474cb867af236f6d2": {
+      "id": "621a86c474cb867af236f6d2",
+      "identityId": "621a86c474cb867af236f6d2",
+      "name": null,
+      "rank": "Settler",
+      "uuid": "76ee7018-2a48-40f8-aca4-7287f2c6b66e",
+      "discordId": null,
+      "town": null,
+      "rankedStats": {
+        "barebones": {},
+        "pot": {}
+      },
+      "_links": {
+        "self": {
+          "href": "http://api.lokamc.com/players/621a86c474cb867af236f6d2"
+        },
+        "player": {
+          "href": "http://api.lokamc.com/players/621a86c474cb867af236f6d2"
+        }
+      }
+    },
+    "603684fa5a123416765475e2": {
+      "id": "603684fa5a123416765475e2",
+      "identityId": "603684fa5a123416765475e2",
+      "name": "00",
+      "rank": null,
+      "uuid": "3e315ef3-66e4-4f79-a08c-4f28dba1779b",
+      "discordId": null,
+      "town": null,
+      "rankedStats": {
+        "barebones": {},
+        "pot": {}
+      },
+      "_links": {
+        "self": {
+          "href": "http://api.lokamc.com/players/603684fa5a123416765475e2"
+        },
+        "player": {
+          "href": "http://api.lokamc.com/players/603684fa5a123416765475e2"
+        }
+      }
+    },
+    "5ff7562e00391d7460a61ac2": {
+      "id": "5ff7562e00391d7460a61ac2",
+      "identityId": "5ff7562e00391d7460a61ac2",
+      "name": "000000000000019",
+      "rank": null,
+      "uuid": "cc2c5d2f-6227-4324-875a-456dc883baac",
+      "discordId": null,
+      "town": null,
+      "rankedStats": {
+        "barebones": {},
+        "pot": {}
+      },
+      "_links": {
+        "self": {
+          "href": "http://api.lokamc.com/players/5ff7562e00391d7460a61ac2"
+        },
+        "player": {
+          "href": "http://api.lokamc.com/players/5ff7562e00391d7460a61ac2"
+        }
+      }
+    },
+    "65f6b71ea68035258e605dbb": {
+      "id": "65f6b71ea68035258e605dbb",
+      "identityId": "65f6b71ea68035258e605dbb",
+      "name": "0000111100",
+      "rank": "settler",
+      "uuid": "2004bf2f-ca75-408c-b75a-4f982006dded",
+      "discordId": null,
+      "town": null,
+      "rankedStats": {
+        "barebones": {},
+        "pot": {}
+      },
+      "_links": {
+        "self": {
+          "href": "http://api.lokamc.com/players/65f6b71ea68035258e605dbb"
+        },
+        "player": {
+          "href": "http://api.lokamc.com/players/65f6b71ea68035258e605dbb"
+        }
+      }
+    },
+    "663e7eb34350bc7f8d7291c0": {
+      "id": "663e7eb34350bc7f8d7291c0",
+      "identityId": "663e7eb34350bc7f8d7291c0",
+      "name": "00012345",
+      "rank": "default",
+      "uuid": "149c83f9-7281-4244-ad0c-63d85bc32b4f",
+      "discordId": null,
+      "town": null,
+      "rankedStats": {
+        "barebones": {},
+        "pot": {}
+      },
+      "_links": {
+        "self": {
+          "href": "http://api.lokamc.com/players/663e7eb34350bc7f8d7291c0"
+        },
+        "player": {
+          "href": "http://api.lokamc.com/players/663e7eb34350bc7f8d7291c0"
+        }
+      }
+    },
+    "5f5a4e5973a5c30454ab63c3": {
+      "id": "5f5a4e5973a5c30454ab63c3",
+      "identityId": "5f5a4e5973a5c30454ab63c3",
+      "name": "000Help",
+      "rank": "Nomad",
+      "uuid": "0f354c7f-b513-4c19-a6de-3b1566b1744c",
+      "discordId": null,
+      "town": null,
+      "rankedStats": {
+        "barebones": {},
+        "pot": {}
+      },
+      "_links": {
+        "self": {
+          "href": "http://api.lokamc.com/players/5f5a4e5973a5c30454ab63c3"
+        },
+        "player": {
+          "href": "http://api.lokamc.com/players/5f5a4e5973a5c30454ab63c3"
+        }
+      }
+    },
+    "66b64966915250421d785874": {
+      "id": "66b64966915250421d785874",
+      "identityId": "66b64966915250421d785874",
+      "name": "000_ontop",
+      "rank": "settler",
+      "uuid": "53b66508-effb-4909-9f36-bb02e8060954",
+      "discordId": null,
+      "town": null,
+      "rankedStats": {
+        "barebones": {},
+        "pot": {}
+      },
+      "_links": {
+        "self": {
+          "href": "http://api.lokamc.com/players/66b64966915250421d785874"
+        },
+        "player": {
+          "href": "http://api.lokamc.com/players/66b64966915250421d785874"
+        }
+      }
+    },
+    "63bc970aa375302b657ce847": {
+      "id": "63bc970aa375302b657ce847",
+      "identityId": "63bc970aa375302b657ce847",
+      "name": "000lj",
+      "rank": "settler",
+      "uuid": "2eda76d6-f13a-4cec-a15b-414cfc30fdc3",
+      "discordId": null,
+      "town": null,
+      "rankedStats": {
+        "barebones": {},
+        "pot": {}
+      },
+      "_links": {
+        "self": {
+          "href": "http://api.lokamc.com/players/63bc970aa375302b657ce847"
+        },
+        "player": {
+          "href": "http://api.lokamc.com/players/63bc970aa375302b657ce847"
+        }
+      }
+    },
+    "60d5a9509800e729b0ea2352": {
+      "id": "60d5a9509800e729b0ea2352",
+      "identityId": "60d5a9509800e729b0ea2352",
+      "name": "000pocwicz",
+      "rank": null,
+      "uuid": "992440ea-3be8-4d5c-be84-b1167719fa88",
+      "discordId": null,
+      "town": null,
+      "rankedStats": {
+        "barebones": {},
+        "pot": {}
+      },
+      "_links": {
+        "self": {
+          "href": "http://api.lokamc.com/players/60d5a9509800e729b0ea2352"
+        },
+        "player": {
+          "href": "http://api.lokamc.com/players/60d5a9509800e729b0ea2352"
+        }
+      }
+    },
+    "5b9745cba7d16a137b3c2207": {
+      "id": "5b9745cba7d16a137b3c2207",
+      "identityId": "5b9745cba7d16a137b3c2207",
+      "name": "00111001",
+      "rank": "Wanderer",
+      "uuid": "6c3f9b42-ac54-4537-a09e-925185c5a591",
+      "discordId": null,
+      "town": null,
+      "rankedStats": {
+        "barebones": {},
+        "pot": {}
+      },
+      "_links": {
+        "self": {
+          "href": "http://api.lokamc.com/players/5b9745cba7d16a137b3c2207"
+        },
+        "player": {
+          "href": "http://api.lokamc.com/players/5b9745cba7d16a137b3c2207"
+        }
+      }
+    },
+    "643856591195d1593208c8f6": {
+      "id": "643856591195d1593208c8f6",
+      "identityId": "643856591195d1593208c8f6",
+      "name": "0019081938919831",
+      "rank": "settler",
+      "uuid": "253963c8-e2fd-40c3-99c1-ec341f08293b",
+      "discordId": null,
+      "town": null,
+      "rankedStats": {
+        "barebones": {
+          "wins": 0,
+          "losses": 0,
+          "streak": 0
+        },
+        "pot": {
+          "wins": 0,
+          "losses": 0,
+          "streak": 0
+        }
+      },
+      "_links": {
+        "self": {
+          "href": "http://api.lokamc.com/players/643856591195d1593208c8f6"
+        },
+        "player": {
+          "href": "http://api.lokamc.com/players/643856591195d1593208c8f6"
+        }
+      }
+    },
+    "66c251f6915250421d786153": {
+      "id": "66c251f6915250421d786153",
+      "identityId": "66c251f6915250421d786153",
+      "name": "001FPS",
+      "rank": "default",
+      "uuid": "a276a1c5-f0fa-46e7-ac67-f4aed7baf3e5",
+      "discordId": null,
+      "town": null,
+      "rankedStats": {
+        "barebones": {},
+        "pot": {}
+      },
+      "_links": {
+        "self": {
+          "href": "http://api.lokamc.com/players/66c251f6915250421d786153"
+        },
+        "player": {
+          "href": "http://api.lokamc.com/players/66c251f6915250421d786153"
+        }
+      }
+    },
+    "638c90d692c8fa60a59342d2": {
+      "id": "638c90d692c8fa60a59342d2",
+      "identityId": "638c90d692c8fa60a59342d2",
+      "name": "002z",
+      "rank": "wanderer",
+      "uuid": "6b55f9cc-bb95-4dfa-a49c-8b7699ad1276",
+      "discordId": null,
+      "town": null,
+      "rankedStats": {
+        "barebones": {},
+        "pot": {}
+      },
+      "_links": {
+        "self": {
+          "href": "http://api.lokamc.com/players/638c90d692c8fa60a59342d2"
+        },
+        "player": {
+          "href": "http://api.lokamc.com/players/638c90d692c8fa60a59342d2"
+        }
+      }
+    },
+    "65e0cd058cfd1c2c5f8735e3": {
+      "id": "65e0cd058cfd1c2c5f8735e3",
+      "identityId": "65e0cd058cfd1c2c5f8735e3",
+      "name": "003zx",
+      "rank": "default",
+      "uuid": "994cd9fa-6834-493a-959d-a69a2b7376c4",
+      "discordId": null,
+      "town": null,
+      "rankedStats": {
+        "barebones": {},
+        "pot": {}
+      },
+      "_links": {
+        "self": {
+          "href": "http://api.lokamc.com/players/65e0cd058cfd1c2c5f8735e3"
+        },
+        "player": {
+          "href": "http://api.lokamc.com/players/65e0cd058cfd1c2c5f8735e3"
+        }
+      }
+    },
+    "6528ce6357311950238db85c": {
+      "id": "6528ce6357311950238db85c",
+      "identityId": "6528ce6357311950238db85c",
+      "name": "007AzmirLive",
+      "rank": "default",
+      "uuid": "ae9da818-4101-461d-9afc-1fcf24b02b27",
+      "discordId": null,
+      "town": null,
+      "rankedStats": {
+        "barebones": {},
+        "pot": {}
+      },
+      "_links": {
+        "self": {
+          "href": "http://api.lokamc.com/players/6528ce6357311950238db85c"
+        },
+        "player": {
+          "href": "http://api.lokamc.com/players/6528ce6357311950238db85c"
+        }
+      }
+    },
+    "5f63e71e2d22ac1976dc5241": {
+      "id": "5f63e71e2d22ac1976dc5241",
+      "identityId": "5f63e71e2d22ac1976dc5241",
+      "name": "007Pierre",
+      "rank": null,
+      "uuid": "ee4291ea-156a-4254-adce-47c40ae09a6d",
+      "discordId": null,
+      "town": null,
+      "rankedStats": {
+        "barebones": {},
+        "pot": {}
+      },
+      "_links": {
+        "self": {
+          "href": "http://api.lokamc.com/players/5f63e71e2d22ac1976dc5241"
+        },
+        "player": {
+          "href": "http://api.lokamc.com/players/5f63e71e2d22ac1976dc5241"
+        }
+      }
+    },
+    "66ce725edbac1631148f19d8": {
+      "id": "66ce725edbac1631148f19d8",
+      "identityId": "66ce725edbac1631148f19d8",
+      "name": "007Slim",
+      "rank": "default",
+      "uuid": "0e4bf907-0da7-4feb-b80f-676671d7296a",
+      "discordId": null,
+      "town": null,
+      "rankedStats": {
+        "barebones": {},
+        "pot": {}
+      },
+      "_links": {
+        "self": {
+          "href": "http://api.lokamc.com/players/66ce725edbac1631148f19d8"
+        },
+        "player": {
+          "href": "http://api.lokamc.com/players/66ce725edbac1631148f19d8"
+        }
+      }
+    },
+    "573b93d49c264737a57a363c": {
+      "id": "573b93d49c264737a57a363c",
+      "identityId": "573b93d49c264737a57a363c",
+      "name": "007_Geko",
+      "rank": "Wanderer",
+      "uuid": "c33bbc79-7bfe-4a04-bfed-86d5c36630ce",
+      "discordId": null,
+      "town": null,
+      "rankedStats": {
+        "barebones": {},
+        "pot": {}
+      },
+      "_links": {
+        "self": {
+          "href": "http://api.lokamc.com/players/573b93d49c264737a57a363c"
+        },
+        "player": {
+          "href": "http://api.lokamc.com/players/573b93d49c264737a57a363c"
+        }
+      }
+    },
+    "6686b978f1254b36e2e03ea1": {
+      "id": "6686b978f1254b36e2e03ea1",
+      "identityId": "6686b978f1254b36e2e03ea1",
+      "name": "007tdawg",
+      "rank": "wanderer",
+      "uuid": "52d0d519-c604-4182-9f29-ce73406f724b",
+      "discordId": null,
+      "town": null,
+      "rankedStats": {
+        "barebones": {},
+        "pot": {}
+      },
+      "_links": {
+        "self": {
+          "href": "http://api.lokamc.com/players/6686b978f1254b36e2e03ea1"
+        },
+        "player": {
+          "href": "http://api.lokamc.com/players/6686b978f1254b36e2e03ea1"
+        }
+      }
+    },
+    "64cff32be78af03710c49896": {
+      "id": "64cff32be78af03710c49896",
+      "identityId": "64cff32be78af03710c49896",
+      "name": "404lucass",
+      "rank": "settler",
+      "uuid": "35965dfd-b7f1-4d47-9ead-64558312f830",
+      "discordId": "1195572439971811390",
+      "town": null,
+      "rankedStats": {
+        "barebones": {
+          "rank": "Iron III",
+          "wins": 3,
+          "losses": 0,
+          "streak": 3
+        },
+        "pot": {
+          "rank": "Gold I",
+          "wins": 159,
+          "losses": 151,
+          "streak": 3
+        }
+      },
+      "_links": {
+        "self": {
+          "href": "http://api.lokamc.com/players/64cff32be78af03710c49896"
+        },
+        "player": {
+          "href": "http://api.lokamc.com/players/64cff32be78af03710c49896"
+        }
+      }
+    },
+    "63c81a2c50d91920f1f7ba09": {
+      "id": "63c81a2c50d91920f1f7ba09",
+      "identityId": "63c81a2c50d91920f1f7ba09",
+      "name": "_snores",
+      "rank": "settler",
+      "uuid": "faca9f84-6738-4cd8-8244-43d6a6eb3bc5",
+      "discordId": "728102217437151323",
+      "town": null,
+      "rankedStats": {
+        "barebones": {
+          "wins": 0,
+          "losses": 0,
+          "streak": 0
+        },
+        "pot": {
+          "rank": "Iron I",
+          "wins": 0,
+          "losses": 0,
+          "streak": 0
+        }
+      },
+      "_links": {
+        "self": {
+          "href": "http://api.lokamc.com/players/63c81a2c50d91920f1f7ba09"
+        },
+        "player": {
+          "href": "http://api.lokamc.com/players/63c81a2c50d91920f1f7ba09"
+        }
+      }
+    },
+    "54cbf53945ce1a073b158524": {
+      "id": "54cbf53945ce1a073b158524",
+      "identityId": "54cbf53945ce1a073b158524",
+      "name": "Hypotemabus",
+      "rank": "Slicer",
+      "uuid": "4a58b1de-7244-44af-9a5a-ee650618fab3",
+      "discordId": "306856773648646146",
+      "town": null,
+      "rankedStats": {
+        "barebones": {},
+        "pot": {
+          "wins": 0,
+          "losses": 0,
+          "streak": 0
+        }
+      },
+      "_links": {
+        "self": {
+          "href": "http://api.lokamc.com/players/54cbf53945ce1a073b158524"
+        },
+        "player": {
+          "href": "http://api.lokamc.com/players/54cbf53945ce1a073b158524"
+        }
+      }
+    },
+    "63c6870eca55620eca2a52f4": {
+      "id": "63c6870eca55620eca2a52f4",
+      "identityId": "63c6870eca55620eca2a52f4",
+      "name": "adxf",
+      "rank": "settler",
+      "uuid": "1ae56307-f225-49de-9262-0b5a3e51bfcf",
+      "discordId": "474156285194010624",
+      "town": null,
+      "rankedStats": {
+        "barebones": {
+          "rank": "Iron II",
+          "wins": 5,
+          "losses": 2,
+          "streak": 1
+        },
+        "pot": {
+          "rank": "Iron II",
+          "wins": 12,
+          "losses": 15,
+          "streak": 1
+        }
+      },
+      "_links": {
+        "self": {
+          "href": "http://api.lokamc.com/players/63c6870eca55620eca2a52f4"
+        },
+        "player": {
+          "href": "http://api.lokamc.com/players/63c6870eca55620eca2a52f4"
+        }
+      }
+    },
+    "6376c8e82759802a5eea1156": {
+      "id": "6376c8e82759802a5eea1156",
+      "identityId": "6376c8e82759802a5eea1156",
+      "name": "raptor355",
+      "rank": "settler",
+      "uuid": "2c2348fa-cebf-4ed0-8f6e-7e517dbb58ca",
+      "discordId": "1132149813962612796",
+      "town": null,
+      "rankedStats": {
+        "barebones": {
+          "wins": 0,
+          "losses": 0,
+          "streak": 0
+        },
+        "pot": {
+          "rank": "Copper I",
+          "wins": 0,
+          "losses": 7,
+          "streak": -7
+        }
+      },
+      "_links": {
+        "self": {
+          "href": "http://api.lokamc.com/players/6376c8e82759802a5eea1156"
+        },
+        "player": {
+          "href": "http://api.lokamc.com/players/6376c8e82759802a5eea1156"
+        }
+      }
+    },
+    "60ea3da736445a7833575cd4": {
+      "id": "60ea3da736445a7833575cd4",
+      "identityId": "60ea3da736445a7833575cd4",
+      "name": "babizye",
+      "rank": "slicer",
+      "uuid": "9f5e6569-f31d-4cfe-b713-9d6ba53576a0",
+      "discordId": "176480546254225418",
+      "town": null,
+      "rankedStats": {
+        "barebones": {
+          "rank": "Copper III",
+          "wins": 0,
+          "losses": 1,
+          "streak": -1
+        },
+        "pot": {
+          "wins": 0,
+          "losses": 0,
+          "streak": 0
+        }
+      },
+      "_links": {
+        "self": {
+          "href": "http://api.lokamc.com/players/60ea3da736445a7833575cd4"
+        },
+        "player": {
+          "href": "http://api.lokamc.com/players/60ea3da736445a7833575cd4"
+        }
+      }
+    },
+    "66d8a393dbac1631148f2055": {
+      "id": "66d8a393dbac1631148f2055",
+      "identityId": "66d8a393dbac1631148f2055",
+      "name": "walterco000",
+      "rank": "settler",
+      "uuid": "8b3f6166-8ee4-42de-9c4a-810dc5cbb5d9",
+      "discordId": "563789557645180968",
+      "town": null,
+      "rankedStats": {
+        "barebones": {},
+        "pot": {
+          "rank": "Copper I",
+          "wins": 1,
+          "losses": 13,
+          "streak": -1
+        }
+      },
+      "_links": {
+        "self": {
+          "href": "http://api.lokamc.com/players/66d8a393dbac1631148f2055"
+        },
+        "player": {
+          "href": "http://api.lokamc.com/players/66d8a393dbac1631148f2055"
+        }
+      }
+    },
+    "649f62927fe760397fe310d6": {
+      "id": "649f62927fe760397fe310d6",
+      "identityId": "649f62927fe760397fe310d6",
+      "name": "what777",
+      "rank": "sentry",
+      "uuid": "54c56dc6-0584-4bcd-97d3-20300710b344",
+      "discordId": "306335904669237250",
+      "town": null,
+      "rankedStats": {
+        "barebones": {},
+        "pot": {
+          "rank": "Iron II",
+          "wins": 1,
+          "losses": 0,
+          "streak": 1
+        }
+      },
+      "_links": {
+        "self": {
+          "href": "http://api.lokamc.com/players/649f62927fe760397fe310d6"
+        },
+        "player": {
+          "href": "http://api.lokamc.com/players/649f62927fe760397fe310d6"
+        }
+      }
+    }
+  },
+  "last_update": "2025-04-02T10:17:44.793689",
+  "highest_page_checked": 0
+}
