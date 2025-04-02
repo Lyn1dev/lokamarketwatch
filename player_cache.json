@@ -656,6 +656,444 @@
           "href": "http://api.lokamc.com/players/649f62927fe760397fe310d6"
         }
       }
+    },
+    "62a5ba0a2c192935bc1e3ec4": {
+      "id": "62a5ba0a2c192935bc1e3ec4",
+      "identityId": "62a5ba0a2c192935bc1e3ec4",
+      "name": "Waltersillo",
+      "rank": "settler",
+      "uuid": "91781d8c-da01-4d19-a62c-9373786b6cf6",
+      "discordId": "674138089903357952",
+      "town": null,
+      "rankedStats": {
+        "barebones": {
+          "rank": "Gold II",
+          "wins": 5,
+          "losses": 1,
+          "streak": -1
+        },
+        "pot": {
+          "rank": "Netherite I",
+          "wins": 116,
+          "losses": 74,
+          "streak": 4
+        }
+      },
+      "_links": {
+        "self": {
+          "href": "http://api.lokamc.com/players/62a5ba0a2c192935bc1e3ec4"
+        },
+        "player": {
+          "href": "http://api.lokamc.com/players/62a5ba0a2c192935bc1e3ec4"
+        }
+      }
+    },
+    "54d2c5c645ce58e94156230f": {
+      "id": "54d2c5c645ce58e94156230f",
+      "identityId": "54d2c5c645ce58e94156230f",
+      "name": "Iwasnotthere",
+      "rank": "sentry",
+      "uuid": "14bbc3dc-219b-4a41-a34d-c69fb95107fb",
+      "discordId": "139156927882985473",
+      "town": null,
+      "rankedStats": {
+        "barebones": {
+          "wins": 0,
+          "losses": 0,
+          "streak": 0
+        },
+        "pot": {
+          "rank": "Iron I",
+          "wins": 0,
+          "losses": 0,
+          "streak": 0
+        }
+      },
+      "_links": {
+        "self": {
+          "href": "http://api.lokamc.com/players/54d2c5c645ce58e94156230f"
+        },
+        "player": {
+          "href": "http://api.lokamc.com/players/54d2c5c645ce58e94156230f"
+        }
+      }
+    },
+    "6084a5960d30da5c6a8e92ec": {
+      "id": "6084a5960d30da5c6a8e92ec",
+      "identityId": "6084a5960d30da5c6a8e92ec",
+      "name": "Biggest_Yoshi",
+      "rank": "settler",
+      "uuid": "39ce494b-6f08-46bd-a03d-5bc451d28cc1",
+      "discordId": null,
+      "town": null,
+      "rankedStats": {
+        "barebones": {
+          "rank": "Iron I",
+          "wins": 2,
+          "losses": 2,
+          "streak": -1
+        },
+        "pot": {
+          "rank": "Emerald II",
+          "wins": 274,
+          "losses": 236,
+          "streak": -2
+        }
+      },
+      "_links": {
+        "self": {
+          "href": "http://api.lokamc.com/players/6084a5960d30da5c6a8e92ec"
+        },
+        "player": {
+          "href": "http://api.lokamc.com/players/6084a5960d30da5c6a8e92ec"
+        }
+      }
+    },
+    "67bb9c1c4160da1bf961aba9": {
+      "id": "67bb9c1c4160da1bf961aba9",
+      "identityId": "67bb9c1c4160da1bf961aba9",
+      "name": "ShakyWakey",
+      "rank": "settler",
+      "uuid": "0772c4ce-a832-4016-be5f-361795a3b282",
+      "discordId": null,
+      "town": null,
+      "rankedStats": {
+        "barebones": {},
+        "pot": {}
+      },
+      "_links": {
+        "self": {
+          "href": "http://api.lokamc.com/players/67bb9c1c4160da1bf961aba9"
+        },
+        "player": {
+          "href": "http://api.lokamc.com/players/67bb9c1c4160da1bf961aba9"
+        }
+      }
+    },
+    "64c5ef7a6ce2bc4f330e5717": {
+      "id": "64c5ef7a6ce2bc4f330e5717",
+      "identityId": "64c5ef7a6ce2bc4f330e5717",
+      "name": "TEMATOELPOPO",
+      "rank": "settler",
+      "uuid": "390ee74c-f6bf-4e17-b42f-39bc314b2e7d",
+      "discordId": null,
+      "town": null,
+      "rankedStats": {
+        "barebones": {},
+        "pot": {}
+      },
+      "_links": {
+        "self": {
+          "href": "http://api.lokamc.com/players/64c5ef7a6ce2bc4f330e5717"
+        },
+        "player": {
+          "href": "http://api.lokamc.com/players/64c5ef7a6ce2bc4f330e5717"
+        }
+      }
+    },
+    "62b390dab9e0cc59c96786a6": {
+      "id": "62b390dab9e0cc59c96786a6",
+      "identityId": "62b390dab9e0cc59c96786a6",
+      "name": "Thelmmortal",
+      "rank": "settler",
+      "uuid": "9d4cce5b-d4b3-46d9-960f-1724717de752",
+      "discordId": "1255841956278567038",
+      "town": null,
+      "rankedStats": {
+        "barebones": {
+          "wins": 0,
+          "losses": 0,
+          "streak": 0
+        },
+        "pot": {
+          "rank": "Gold I",
+          "wins": 199,
+          "losses": 201,
+          "streak": 2
+        }
+      },
+      "_links": {
+        "self": {
+          "href": "http://api.lokamc.com/players/62b390dab9e0cc59c96786a6"
+        },
+        "player": {
+          "href": "http://api.lokamc.com/players/62b390dab9e0cc59c96786a6"
+        }
+      }
+    },
+    "60b7e703f63aaf2df2bd99bc": {
+      "id": "60b7e703f63aaf2df2bd99bc",
+      "identityId": "60b7e703f63aaf2df2bd99bc",
+      "name": "DevvyVR",
+      "rank": "settler",
+      "uuid": "022db8af-fe39-48e5-bb3f-ff27eaf04d95",
+      "discordId": "835280698327564318",
+      "town": null,
+      "rankedStats": {
+        "barebones": {
+          "wins": 0,
+          "losses": 0,
+          "streak": 0
+        },
+        "pot": {
+          "rank": "Copper II",
+          "wins": 11,
+          "losses": 19,
+          "streak": -2
+        }
+      },
+      "_links": {
+        "self": {
+          "href": "http://api.lokamc.com/players/60b7e703f63aaf2df2bd99bc"
+        },
+        "player": {
+          "href": "http://api.lokamc.com/players/60b7e703f63aaf2df2bd99bc"
+        }
+      }
+    },
+    "5fceb77d1ccc061594005287": {
+      "id": "5fceb77d1ccc061594005287",
+      "identityId": "5fceb77d1ccc061594005287",
+      "name": "Piruletaas",
+      "rank": "slicer",
+      "uuid": "8395adf4-b8c4-4a47-b4b6-090ab85c568c",
+      "discordId": "692059952201859134",
+      "town": null,
+      "rankedStats": {
+        "barebones": {
+          "wins": 0,
+          "losses": 0,
+          "streak": 0
+        },
+        "pot": {}
+      },
+      "_links": {
+        "self": {
+          "href": "http://api.lokamc.com/players/5fceb77d1ccc061594005287"
+        },
+        "player": {
+          "href": "http://api.lokamc.com/players/5fceb77d1ccc061594005287"
+        }
+      }
+    },
+    "64b212154818b122bc445aa9": {
+      "id": "64b212154818b122bc445aa9",
+      "identityId": "64b212154818b122bc445aa9",
+      "name": "Daegesta",
+      "rank": "settler",
+      "uuid": "5983fa6f-f0de-41f6-91f5-eea5f5aa1210",
+      "discordId": "895319335919312947",
+      "town": null,
+      "rankedStats": {
+        "barebones": {
+          "wins": 0,
+          "losses": 0,
+          "streak": 0
+        },
+        "pot": {
+          "rank": "Gold I",
+          "wins": 592,
+          "losses": 562,
+          "streak": -1
+        }
+      },
+      "_links": {
+        "self": {
+          "href": "http://api.lokamc.com/players/64b212154818b122bc445aa9"
+        },
+        "player": {
+          "href": "http://api.lokamc.com/players/64b212154818b122bc445aa9"
+        }
+      }
+    },
+    "60bb3518fc107857184bc914": {
+      "id": "60bb3518fc107857184bc914",
+      "identityId": "60bb3518fc107857184bc914",
+      "name": "Kippehz",
+      "rank": "settler",
+      "uuid": "f9147fc6-0c16-4429-84ac-773513298b54",
+      "discordId": "754650620291711006",
+      "town": null,
+      "rankedStats": {
+        "barebones": {
+          "wins": 0,
+          "losses": 0,
+          "streak": 0
+        },
+        "pot": {
+          "rank": "Gold II",
+          "wins": 27,
+          "losses": 22,
+          "streak": -3
+        }
+      },
+      "_links": {
+        "self": {
+          "href": "http://api.lokamc.com/players/60bb3518fc107857184bc914"
+        },
+        "player": {
+          "href": "http://api.lokamc.com/players/60bb3518fc107857184bc914"
+        }
+      }
+    },
+    "60a81e3cbcc24240ae497b62": {
+      "id": "60a81e3cbcc24240ae497b62",
+      "identityId": "60a81e3cbcc24240ae497b62",
+      "name": "zShaded",
+      "rank": "settler",
+      "uuid": "a20f7864-ac66-4fb1-9c7e-2350faf99d26",
+      "discordId": null,
+      "town": null,
+      "rankedStats": {
+        "barebones": {},
+        "pot": {
+          "wins": 0,
+          "losses": 0,
+          "streak": 0
+        }
+      },
+      "_links": {
+        "self": {
+          "href": "http://api.lokamc.com/players/60a81e3cbcc24240ae497b62"
+        },
+        "player": {
+          "href": "http://api.lokamc.com/players/60a81e3cbcc24240ae497b62"
+        }
+      }
+    },
+    "619a65ede617bb45149de2e1": {
+      "id": "619a65ede617bb45149de2e1",
+      "identityId": "619a65ede617bb45149de2e1",
+      "name": "somalipirate_2",
+      "rank": "settler",
+      "uuid": "95dd6df9-7c7f-410e-a8ec-0539988c73b3",
+      "discordId": null,
+      "town": null,
+      "rankedStats": {
+        "barebones": {},
+        "pot": {}
+      },
+      "_links": {
+        "self": {
+          "href": "http://api.lokamc.com/players/619a65ede617bb45149de2e1"
+        },
+        "player": {
+          "href": "http://api.lokamc.com/players/619a65ede617bb45149de2e1"
+        }
+      }
+    },
+    "641b781582899a596b0408b6": {
+      "id": "641b781582899a596b0408b6",
+      "identityId": "641b781582899a596b0408b6",
+      "name": "Cabagaba1610",
+      "rank": "settler",
+      "uuid": "2ef81286-ea49-469d-b5c1-64e028023174",
+      "discordId": "1249690220484497408",
+      "town": null,
+      "rankedStats": {
+        "barebones": {
+          "rank": "Copper III",
+          "wins": 0,
+          "losses": 1,
+          "streak": -1
+        },
+        "pot": {
+          "rank": "Stone II",
+          "wins": 2,
+          "losses": 14,
+          "streak": -1
+        }
+      },
+      "_links": {
+        "self": {
+          "href": "http://api.lokamc.com/players/641b781582899a596b0408b6"
+        },
+        "player": {
+          "href": "http://api.lokamc.com/players/641b781582899a596b0408b6"
+        }
+      }
+    },
+    "62ebe046759e5d4ef8e17486": {
+      "id": "62ebe046759e5d4ef8e17486",
+      "identityId": "62ebe046759e5d4ef8e17486",
+      "name": "GrubyGibby",
+      "rank": "settler",
+      "uuid": "93f9c090-1422-4acb-86cc-110f7cdf35ac",
+      "discordId": null,
+      "town": null,
+      "rankedStats": {
+        "barebones": {},
+        "pot": {}
+      },
+      "_links": {
+        "self": {
+          "href": "http://api.lokamc.com/players/62ebe046759e5d4ef8e17486"
+        },
+        "player": {
+          "href": "http://api.lokamc.com/players/62ebe046759e5d4ef8e17486"
+        }
+      }
+    },
+    "6027c06b32fcef0e05981fe5": {
+      "id": "6027c06b32fcef0e05981fe5",
+      "identityId": "6027c06b32fcef0e05981fe5",
+      "name": "AKHISARLI",
+      "rank": "slicer",
+      "uuid": "80ab7077-601b-4741-90e3-1b56146cde06",
+      "discordId": "518089882959085569",
+      "town": null,
+      "rankedStats": {
+        "barebones": {
+          "rank": "Iron I",
+          "wins": 0,
+          "losses": 0,
+          "streak": 0
+        },
+        "pot": {
+          "rank": "Iron II",
+          "wins": 33,
+          "losses": 35,
+          "streak": -1
+        }
+      },
+      "_links": {
+        "self": {
+          "href": "http://api.lokamc.com/players/6027c06b32fcef0e05981fe5"
+        },
+        "player": {
+          "href": "http://api.lokamc.com/players/6027c06b32fcef0e05981fe5"
+        }
+      }
+    },
+    "627b52b15cc8263bec296cf2": {
+      "id": "627b52b15cc8263bec296cf2",
+      "identityId": "627b52b15cc8263bec296cf2",
+      "name": "Kippenwortel",
+      "rank": "settler",
+      "uuid": "10c33622-ebfc-4b2e-9fca-b2fe1cc37a69",
+      "discordId": "917350619365376040",
+      "town": null,
+      "rankedStats": {
+        "barebones": {
+          "wins": 0,
+          "losses": 0,
+          "streak": 0
+        },
+        "pot": {
+          "rank": "Iron I",
+          "wins": 0,
+          "losses": 0,
+          "streak": 0
+        }
+      },
+      "_links": {
+        "self": {
+          "href": "http://api.lokamc.com/players/627b52b15cc8263bec296cf2"
+        },
+        "player": {
+          "href": "http://api.lokamc.com/players/627b52b15cc8263bec296cf2"
+        }
+      }
     }
   },
   "last_update": "2025-04-02T10:17:44.793689",

@@ -256,73 +256,79 @@ async def ping(interaction: discord.Interaction):
     await interaction.response.send_message("Pong!")
 
 # Active Sales Command
-@client.tree.command(name="buyorders", description="Lists buy orders from the Loka Market.")
+@client.tree.command(name="buyorders", description="Get market buy orders")
 @app_commands.describe(
-    item="The specific type of item to search for (optional)",
-    buyer="The player name to check their buy orders (optional)"
+    item="Item name to filter by (e.g., EMERALD, DIAMOND)",
+    buyer="Player name who is buying the items"
 )
 async def buyorders(interaction: discord.Interaction, item: str = None, buyer: str = None):
-    try:
-        await interaction.response.defer(thinking=True)
-        
-        async with aiohttp.ClientSession() as session:
-            all_items = []
-            filtered_by_item = False
-            item_upper = item.upper() if item else None
-            
-            # If buyer is specified, find their ID
-            buyer_id = None
-            buyer_name = None
-            
-            # Build the URL for the API request
-            if buyer:
-                try:
-                    logger.info(f"Searching for buyer: '{buyer}'")
-                    player = await client.search_player_by_name(buyer)
-                    
-                    if player and isinstance(player, dict):
-                        buyer_id = player.get("id")
-                        buyer_name = player.get("name")
-                        
-                        if buyer_id:
-                            logger.info(f"Found buyer: {buyer_name} with ID: {buyer_id}")
-                            # Use the findByOwnerId endpoint
-                            next_url = f"https://api.lokamc.com/market_buyorders/search/findByOwnerId?id={buyer_id}"
-                            logger.info(f"Using buyer endpoint with ID {buyer_id}: {next_url}")
-                            
-                            # If item is also specified, we'll filter results after fetching
-                            if item:
-                                logger.info(f"Will filter {buyer_name}'s orders by item type: {item_upper}")
-                                filtered_by_item = True
-                        else:
-                            logger.warning(f"Found player but ID is missing: {player}")
-                            await interaction.followup.send(f"Found player '{buyer}' but couldn't get their ID. Please try again.")
-                            return
-                    else:
-                        logger.warning(f"Could not find player with name '{buyer}'")
-                        await interaction.followup.send(f"Could not find player with name '{buyer}'")
-                        return
-                except Exception as e:
-                    logger.error(f"Error looking up buyer '{buyer}': {e}")
-                    await interaction.followup.send(f"Error looking up player '{buyer}'. Please try again.")
-                    return
-            elif item:
-                # Use the findByType endpoint
-                next_url = f"https://api.lokamc.com/market_buyorders/search/findByType?type={item_upper}"
-            else:
-                # Use the default endpoint for all items
-                next_url = "https://api.lokamc.com/market_buyorders"
-            
-            logger.info(f"Fetching buy orders from URL: {next_url}")
-            
-            # Keep track of unique seller IDs we need to look up
-            seller_ids = set()
-            
-            # Process API responses
+    await interaction.response.defer()
+    
+    logger.info(f"Buy order requested by {interaction.user.name} with item: {item}, buyer: {buyer}")
+    
+    # Convert item to uppercase for comparison
+    item_upper = item.upper() if item else None
+    
+    all_items = []
+    buyer_ids = set()
+    filtered_by_item = False
+    buyer_id = None
+    buyer_name = None
+    
+    async with aiohttp.ClientSession() as session:
+        # Build the URL for the API request
+        if buyer:
             try:
-                while next_url:
+                logger.info(f"Searching for buyer: '{buyer}'")
+                player = await client.search_player_by_name(buyer)
+                
+                if player and isinstance(player, dict):
+                    buyer_id = player.get("id")
+                    buyer_name = player.get("name")
+                    
+                    if buyer_id:
+                        logger.info(f"Found buyer: {buyer_name} with ID: {buyer_id}")
+                        # Use the findByOwnerId endpoint
+                        next_url = f"https://api.lokamc.com/market_buyorders/search/findByOwnerId?id={buyer_id}&size=100"
+                        logger.info(f"Using buyer endpoint with ID {buyer_id}: {next_url}")
+                        
+                        # If item is also specified, we'll filter results after fetching
+                        if item:
+                            logger.info(f"Will filter {buyer_name}'s buy orders by item type: {item_upper}")
+                            filtered_by_item = True
+                    else:
+                        logger.warning(f"Found player but ID is missing: {player}")
+                        await interaction.followup.send(f"Found player '{buyer}' but couldn't get their ID. Please try again.")
+                        return
+                else:
+                    logger.warning(f"Could not find player with name '{buyer}'")
+                    await interaction.followup.send(f"Could not find player with name '{buyer}'")
+                    return
+            except Exception as e:
+                logger.error(f"Error looking up buyer '{buyer}': {e}")
+                await interaction.followup.send(f"Error looking up player '{buyer}'. Please try again.")
+                return
+        elif item:
+            # Use the findByType endpoint
+            next_url = f"https://api.lokamc.com/market_buyorders/search/findByType?type={item_upper}&size=100"
+        else:
+            # Use the default endpoint for all items
+            next_url = "https://api.lokamc.com/market_buyorders?size=100"
+        
+        logger.info(f"Fetching buy orders from URL: {next_url}")
+        
+        # Process API responses
+        retry_count = 0
+        max_retries = 3
+        
+        try:
+            while next_url and retry_count < max_retries:
+                try:
                     async with session.get(next_url) as response:
                         if response.status == 200:
+                            # Reset retry counter on success
+                            retry_count = 0
+                            
                             data = await response.json()
                             
                             # Log the data structure to debug
@@ -335,10 +341,17 @@ async def buyorders(interaction: discord.Interaction, item: str = None, buyer: s
                                     if "market_buyorders" in data["_embedded"]:
                                         items_list = data["_embedded"]["market_buyorders"]
                                         logger.info(f"Found {len(items_list)} buy orders in market_buyorders")
-                                    elif "market_sales" in data["_embedded"]:
+                                    elif "market_sales" in data["_embedded"]:  # API sometimes uses this key
                                         items_list = data["_embedded"]["market_sales"]
                                         logger.info(f"Found {len(items_list)} buy orders in market_sales")
                             
+                            # Log detailed pagination information
+                            page_info = data.get("page", {})
+                            if page_info:
+                                logger.info(f"Page info: size={page_info.get('size')}, totalElements={page_info.get('totalElements')}, " +
+                                           f"totalPages={page_info.get('totalPages')}, number={page_info.get('number')}")
+                            
+                            # Process items from the current page
                             for item_data in items_list:
                                 if item_data:  # Make sure item_data is not None
                                     owner_id = item_data.get("ownerId")
@@ -347,9 +360,9 @@ async def buyorders(interaction: discord.Interaction, item: str = None, buyer: s
                                     # If both filters are active, only add matching items
                                     if filtered_by_item and item_upper and material_type.upper() != item_upper:
                                         continue
-                                        
-                                    if owner_id and not buyer:  # Only track seller IDs if we're not already filtering by buyer
-                                        seller_ids.add(owner_id)
+                                    
+                                    if owner_id and not buyer:  # Only track buyer IDs if we're not already filtering by buyer
+                                        buyer_ids.add(owner_id)
                                     
                                     all_items.append({
                                         "material": material_type,
@@ -358,50 +371,411 @@ async def buyorders(interaction: discord.Interaction, item: str = None, buyer: s
                                         "ownerId": owner_id
                                     })
                             
-                            # Get next page URL if available
-                            next_link = data.get("_links", {}).get("next", {}).get("href")
+                            # Detailed logging of link structure
+                            links = data.get("_links", {})
+                            logger.info(f"Available links: {list(links.keys())}")
+                            if "next" in links:
+                                logger.info(f"Next link details: {links['next']}")
+                            
+                            # Get next page URL if available - ensuring we don't miss any
+                            next_link = None
+                            if "_links" in data and "next" in data["_links"]:
+                                next_info = data["_links"]["next"]
+                                if isinstance(next_info, dict) and "href" in next_info:
+                                    next_link = next_info["href"]
+                            
                             if next_link and next_link.startswith("/"):
                                 next_url = f"https://api.lokamc.com{next_link}"
                                 logger.info(f"Next page URL: {next_url}")
                             else:
-                                logger.info("No next page found")
+                                logger.info("No next page found or reached the end")
                                 next_url = None
+                        elif response.status == 429:  # Rate limited
+                            retry_count += 1
+                            logger.warning(f"Rate limited. Retry {retry_count}/{max_retries}. Waiting 2 seconds...")
+                            await asyncio.sleep(2)  # Wait before retrying
+                            continue  # Try again with the same URL
                         else:
                             logger.error(f"API request failed with status: {response.status}")
-                            await interaction.followup.send(f"API request failed with status: {response.status}")
+                            if retry_count < max_retries - 1:
+                                retry_count += 1
+                                logger.warning(f"Retrying {retry_count}/{max_retries}. Waiting 2 seconds...")
+                                await asyncio.sleep(2)  # Wait before retrying
+                                continue  # Try again with the same URL
+                            else:
+                                await interaction.followup.send(f"API request failed with status: {response.status}")
+                                return
+                except aiohttp.ClientError as e:
+                    logger.error(f"API request error: {e}")
+                    if retry_count < max_retries - 1:
+                        retry_count += 1
+                        logger.warning(f"Retrying {retry_count}/{max_retries}. Waiting 2 seconds...")
+                        await asyncio.sleep(2)  # Wait before retrying
+                        continue  # Try again with the same URL
+                    else:
+                        await interaction.followup.send("Failed to fetch market data. Please try again later.")
+                        return
+        except Exception as e:
+            logger.error(f"Unexpected error in buyorders command: {e}")
+            await interaction.followup.send("An unexpected error occurred. Please try again later.")
+        
+        # After fetching all orders, no need to filter again as we already filtered during processing
+        logger.info(f"Total buy orders found: {len(all_items)}")
+        
+        if not all_items:
+            if buyer_name and item:
+                await interaction.followup.send(f"No buy orders found for item '{item}' from player '{buyer_name}'")
+            elif buyer_name:
+                await interaction.followup.send(f"No buy orders found for player '{buyer_name}'")
+            elif buyer:
+                await interaction.followup.send(f"No buy orders found for player '{buyer}'")
+            elif item:
+                await interaction.followup.send(f"No buy orders found for item '{item}'")
+            else:
+                await interaction.followup.send("No buy orders found. This could be due to an API issue. Please try again later.")
+            return
+        
+        # If we're not filtering by buyer, try to populate seller names
+        seller_names = {}
+        if not buyer and client.seller_lookup:
+            logger.info(f"Need to look up {len(buyer_ids)} unique sellers")
+            
+            # First check cache for sellers we already know
+            for seller_id in list(buyer_ids):
+                if seller_id in client.player_cache.players:
+                    seller = client.player_cache.players[seller_id]
+                    if seller and "name" in seller:
+                        seller_names[seller_id] = seller["name"]
+                        buyer_ids.remove(seller_id)
+            
+            logger.info(f"Found {len(seller_names)} sellers in cache, {len(buyer_ids)} still need lookup")
+            
+            # If we still have sellers to look up, only fetch a limited number to avoid rate limits
+            max_lookups = min(5, len(buyer_ids))  # Limit to 5 seller lookups per command
+            if buyer_ids and max_lookups > 0:
+                # Create a new session for seller lookups
+                async with aiohttp.ClientSession() as seller_session:
+                    for seller_id in list(buyer_ids)[:max_lookups]:
+                        try:
+                            player_url = f"https://api.lokamc.com/players/{seller_id}"
+                            async with seller_session.get(player_url) as player_response:
+                                if player_response.status == 200:
+                                    seller = await player_response.json()
+                                    if seller and "name" in seller:
+                                        seller_names[seller_id] = seller["name"]
+                                        # Add to cache for future use
+                                        client.player_cache.players[seller_id] = seller
+                                        # Save cache immediately to avoid losing this info
+                                        client.player_cache.save_cache()
+                        except Exception as e:
+                            logger.error(f"Error fetching player {seller_id}: {e}")
+                        # Add a small delay between requests
+                        await asyncio.sleep(0.5)
+
+        items_per_page = 10
+        num_pages = (len(all_items) + items_per_page - 1) // items_per_page
+        current_page = 0
+
+        async def update_embed(page: int):
+            start_index = page * items_per_page
+            end_index = min(start_index + items_per_page, len(all_items))
+            items = all_items[start_index:end_index]
+
+            title = "Buy Orders"
+            if buyer_name and item:
+                title = f"Buy Orders for {item_upper} by {buyer_name}"
+            elif buyer_name:
+                title = f"Buy Orders by {buyer_name}"
+            elif buyer:
+                title = f"Buy Orders by {buyer}"
+            elif item:
+                title = f"Buy Orders for {item_upper}"
+
+            embed = discord.Embed(title=title, color=discord.Color.gold())
+            
+            # If we're filtering by a specific buyer, set their head as the thumbnail
+            if buyer_name:
+                embed.set_thumbnail(url=f"https://mc-heads.net/head/{buyer_name}")
+                embed.set_author(name=f"{buyer_name}'s Buy Orders", icon_url=f"https://mc-heads.net/avatar/{buyer_name}/32")
+            
+            # Handle case where no items were found
+            if not items:
+                embed.add_field(
+                    name="No Items Found",
+                    value="No buy orders matching your criteria were found.",
+                    inline=False
+                )
+                return embed
+            
+            for item_data in items:
+                name = item_data.get("material", "Unknown Material")
+                price = item_data.get("price", 0)
+                quantity = item_data.get("quantity", 0)
+                
+                # If we're not already filtering by buyer, show the owner's name
+                if not buyer and item_data.get("ownerId"):
+                    owner_id = item_data["ownerId"]
+                    # Use our lookup results
+                    owner_name = seller_names.get(owner_id, "Unknown")
+                    
+                    # Create a field with seller information
+                    value = f"Price: {price}<:PowerShard:1356559399409422336> | Quantity: {quantity}"
+                    if owner_name and owner_name != "Unknown":
+                        value += f"\nSeller: **{owner_name}**"
+                        # Add a seller-specific icon to the embed if not already set
+                        if not embed.thumbnail and page == 0 and item_data == items[0]:
+                            embed.set_thumbnail(url=f"https://mc-heads.net/head/{owner_name}")
+                    else:
+                        value += "\nSeller: Unknown"
+                    
+                    embed.add_field(
+                        name=name,
+                        value=value,
+                        inline=False
+                    )
+                else:
+                    embed.add_field(
+                        name=name,
+                        value=f"Price: {price}<:PowerShard:1356559399409422336> | Quantity: {quantity}",
+                        inline=False
+                    )
+
+            if len(all_items) > items_per_page:
+                embed.set_footer(text=f"Page {current_page + 1} of {num_pages}")
+            return embed
+
+        async def button_callback(interaction: discord.Interaction, page_num: int):
+            nonlocal current_page
+            current_page = page_num
+            embed = await update_embed(current_page)
+            
+            # Update the buttons when page changes
+            prev_button_disabled = (current_page == 0)
+            next_button_disabled = (current_page >= num_pages - 1)
+            
+            # Recreate view with updated button states
+            view = discord.ui.View(timeout=60)
+            prev_button = discord.ui.Button(label="Previous", style=discord.ButtonStyle.secondary, disabled=prev_button_disabled)
+            next_button = discord.ui.Button(label="Next", style=discord.ButtonStyle.secondary, disabled=next_button_disabled)
+            
+            prev_button.callback = lambda i: button_callback(i, max(0, current_page - 1))
+            next_button.callback = lambda i: button_callback(i, min(num_pages - 1, current_page + 1))
+            
+            view.add_item(prev_button)
+            view.add_item(next_button)
+            
+            await interaction.response.edit_message(embed=embed, view=view)
+
+        # Create initial buttons with proper disabled states
+        prev_button_disabled = (current_page == 0)
+        next_button_disabled = (current_page >= num_pages - 1)
+        
+        view = discord.ui.View(timeout=60)
+        prev_page_button = discord.ui.Button(label="Previous", style=discord.ButtonStyle.secondary, disabled=prev_button_disabled)
+        next_page_button = discord.ui.Button(label="Next", style=discord.ButtonStyle.secondary, disabled=next_button_disabled)
+
+        prev_page_button.callback = lambda i: button_callback(i, max(0, current_page - 1))
+        next_page_button.callback = lambda i: button_callback(i, min(num_pages - 1, current_page + 1))
+
+        # Add buttons to view
+        view.add_item(prev_page_button)
+        view.add_item(next_page_button)
+        view.timeout = 60  # Set timeout to 60 seconds
+
+        embed = await update_embed(current_page)
+        await interaction.followup.send(embed=embed, view=view)
+        
+@client.tree.command(name="sales", description="Lists active sales from the Loka Market.")
+@app_commands.describe(
+    item="The specific type of item to search for (optional)",
+    seller="The player name to check their sales (optional)"
+)
+async def sales(interaction: discord.Interaction, item: str = None, seller: str = None):
+    try:
+        await interaction.response.defer(thinking=True)
+        
+        async with aiohttp.ClientSession() as session:
+            all_items = []
+            filtered_by_item = False
+            item_upper = item.upper() if item else None
+            
+            # If seller is specified, find their ID
+            seller_id = None
+            seller_name = None
+            
+            # Build the URL for the API request
+            if seller:
+                try:
+                    logger.info(f"Searching for seller: '{seller}'")
+                    player = await client.search_player_by_name(seller)
+                    
+                    if player and isinstance(player, dict):
+                        seller_id = player.get("id")
+                        seller_name = player.get("name")
+                        
+                        if seller_id:
+                            logger.info(f"Found seller: {seller_name} with ID: {seller_id}")
+                            # Use the findByOwnerId endpoint
+                            next_url = f"https://api.lokamc.com/market_sales/search/findByOwnerId?id={seller_id}&size=100"
+                            logger.info(f"Using seller endpoint with ID {seller_id}: {next_url}")
+                            
+                            # If item is also specified, we'll filter results after fetching
+                            if item:
+                                logger.info(f"Will filter {seller_name}'s sales by item type: {item_upper}")
+                                filtered_by_item = True
+                        else:
+                            logger.warning(f"Found player but ID is missing: {player}")
+                            await interaction.followup.send(f"Found player '{seller}' but couldn't get their ID. Please try again.")
                             return
-            except aiohttp.ClientError as e:
-                logger.error(f"API request error: {e}")
-                await interaction.followup.send("Failed to fetch market data. Please try again later.")
-                return
+                    else:
+                        logger.warning(f"Could not find player with name '{seller}'")
+                        await interaction.followup.send(f"Could not find player with name '{seller}'")
+                        return
+                except Exception as e:
+                    logger.error(f"Error looking up seller '{seller}': {e}")
+                    await interaction.followup.send(f"Error looking up player '{seller}'. Please try again.")
+                    return
+            elif item:
+                # Use the findByType endpoint
+                next_url = f"https://api.lokamc.com/market_sales/search/findByType?type={item_upper}&size=100"
+            else:
+                # Use the default endpoint for all items
+                next_url = "https://api.lokamc.com/market_sales?size=100"
+            
+            logger.info(f"Fetching sales from URL: {next_url}")
+            
+            # Keep track of unique seller IDs we need to look up
+            seller_ids = set()
+            
+            # Process API responses
+            retry_count = 0
+            max_retries = 3
+            
+            try:
+                while next_url and retry_count < max_retries:
+                    try:
+                        async with session.get(next_url) as response:
+                            if response.status == 200:
+                                # Reset retry counter on success
+                                retry_count = 0
+                                
+                                data = await response.json()
+                                
+                                # Log the data structure to debug
+                                logger.info(f"Response structure: {list(data.keys()) if isinstance(data, dict) else 'Not a dict'}")
+                                
+                                # Check for both possible response structures
+                                items_list = []
+                                if isinstance(data, dict):
+                                    if "_embedded" in data:
+                                        if "market_sales" in data["_embedded"]:
+                                            items_list = data["_embedded"]["market_sales"]
+                                            logger.info(f"Found {len(items_list)} sales in market_sales")
+                                        elif "market_buyorders" in data["_embedded"]:  # API sometimes uses this key for sales too
+                                            items_list = data["_embedded"]["market_buyorders"]
+                                            logger.info(f"Found {len(items_list)} sales in market_buyorders")
+                                            
+                                # Log detailed pagination information
+                                page_info = data.get("page", {})
+                                if page_info:
+                                    logger.info(f"Page info: size={page_info.get('size')}, totalElements={page_info.get('totalElements')}, " +
+                                               f"totalPages={page_info.get('totalPages')}, number={page_info.get('number')}")
+                                    
+                                # Process items from the current page
+                                for item_data in items_list:
+                                    if item_data:  # Make sure item_data is not None
+                                        owner_id = item_data.get("ownerId")
+                                        material_type = item_data.get("type", "Unknown")
+                                        
+                                        # If both filters are active, only add matching items
+                                        if filtered_by_item and item_upper and material_type.upper() != item_upper:
+                                            continue
+                                            
+                                        if owner_id and not seller:  # Only track seller IDs if we're not already filtering by seller
+                                            seller_ids.add(owner_id)
+                                        
+                                        all_items.append({
+                                            "material": material_type,
+                                            "price": round(item_data.get("price", 0)),
+                                            "quantity": item_data.get("quantity", 0),
+                                            "ownerId": owner_id
+                                        })
+                                
+                                # Detailed logging of link structure
+                                links = data.get("_links", {})
+                                logger.info(f"Available links: {list(links.keys())}")
+                                if "next" in links:
+                                    logger.info(f"Next link details: {links['next']}")
+                                    
+                                # Get next page URL if available - ensuring we don't miss any
+                                next_link = None
+                                if "_links" in data and "next" in data["_links"]:
+                                    next_info = data["_links"]["next"]
+                                    if isinstance(next_info, dict) and "href" in next_info:
+                                        next_link = next_info["href"]
+                                        
+                                if next_link and next_link.startswith("/"):
+                                    next_url = f"https://api.lokamc.com{next_link}"
+                                    logger.info(f"Next page URL: {next_url}")
+                                else:
+                                    logger.info("No next page found or reached the end")
+                                    next_url = None
+                            elif response.status == 429:  # Rate limited
+                                retry_count += 1
+                                logger.warning(f"Rate limited. Retry {retry_count}/{max_retries}. Waiting 2 seconds...")
+                                await asyncio.sleep(2)  # Wait before retrying
+                                continue  # Try again with the same URL
+                            else:
+                                logger.error(f"API request failed with status: {response.status}")
+                                if retry_count < max_retries - 1:
+                                    retry_count += 1
+                                    logger.warning(f"Retrying {retry_count}/{max_retries}. Waiting 2 seconds...")
+                                    await asyncio.sleep(2)  # Wait before retrying
+                                    continue  # Try again with the same URL
+                                else:
+                                    await interaction.followup.send(f"API request failed with status: {response.status}")
+                                    return
+                    except aiohttp.ClientError as e:
+                        logger.error(f"API request error: {e}")
+                        if retry_count < max_retries - 1:
+                            retry_count += 1
+                            logger.warning(f"Retrying {retry_count}/{max_retries}. Waiting 2 seconds...")
+                            await asyncio.sleep(2)  # Wait before retrying
+                            continue  # Try again with the same URL
+                        else:
+                            await interaction.followup.send("Failed to fetch market data. Please try again later.")
+                            return
+            except Exception as e:
+                logger.error(f"Unexpected error in sales command: {e}")
+                await interaction.followup.send("An unexpected error occurred. Please try again later.")
             
             # After fetching all orders, no need to filter again as we already filtered during processing
-            logger.info(f"Total buy orders found: {len(all_items)}")
+            logger.info(f"Total sales found: {len(all_items)}")
             
             if not all_items:
-                if buyer_name and item:
-                    await interaction.followup.send(f"No buy orders found for item '{item}' from player '{buyer_name}'")
-                elif buyer_name:
-                    await interaction.followup.send(f"No buy orders found for player '{buyer_name}'")
-                elif buyer:
-                    await interaction.followup.send(f"No buy orders found for player '{buyer}'")
+                if seller_name and item:
+                    await interaction.followup.send(f"No sales found for item '{item}' from player '{seller_name}'")
+                elif seller_name:
+                    await interaction.followup.send(f"No sales found for player '{seller_name}'")
+                elif seller:
+                    await interaction.followup.send(f"No sales found for player '{seller}'")
                 elif item:
-                    await interaction.followup.send(f"No buy orders found for item '{item}'")
+                    await interaction.followup.send(f"No sales found for item '{item}'")
                 else:
-                    await interaction.followup.send("No buy orders found. This could be due to an API issue. Please try again later.")
+                    await interaction.followup.send("No sales found. This could be due to an API issue. Please try again later.")
                 return
             
-            # If we're not filtering by buyer, try to populate seller names
+            # If we're not filtering by seller, try to populate seller names
             seller_names = {}
-            if not buyer and client.seller_lookup:
+            if not seller and client.seller_lookup:
                 logger.info(f"Need to look up {len(seller_ids)} unique sellers")
                 
                 # First check cache for sellers we already know
                 for seller_id in list(seller_ids):
                     if seller_id in client.player_cache.players:
-                        seller = client.player_cache.players[seller_id]
-                        if seller and "name" in seller:
-                            seller_names[seller_id] = seller["name"]
+                        seller_data = client.player_cache.players[seller_id]
+                        if seller_data and "name" in seller_data:
+                            seller_names[seller_id] = seller_data["name"]
                             seller_ids.remove(seller_id)
                 
                 logger.info(f"Found {len(seller_names)} sellers in cache, {len(seller_ids)} still need lookup")
@@ -416,11 +790,11 @@ async def buyorders(interaction: discord.Interaction, item: str = None, buyer: s
                                 player_url = f"https://api.lokamc.com/players/{seller_id}"
                                 async with seller_session.get(player_url) as player_response:
                                     if player_response.status == 200:
-                                        seller = await player_response.json()
-                                        if seller and "name" in seller:
-                                            seller_names[seller_id] = seller["name"]
+                                        seller_data = await player_response.json()
+                                        if seller_data and "name" in seller_data:
+                                            seller_names[seller_id] = seller_data["name"]
                                             # Add to cache for future use
-                                            client.player_cache.players[seller_id] = seller
+                                            client.player_cache.players[seller_id] = seller_data
                                             # Save cache immediately to avoid losing this info
                                             client.player_cache.save_cache()
                             except Exception as e:
@@ -437,28 +811,28 @@ async def buyorders(interaction: discord.Interaction, item: str = None, buyer: s
                 end_index = min(start_index + items_per_page, len(all_items))
                 items = all_items[start_index:end_index]
 
-                title = "Buy Orders"
-                if buyer_name and item:
-                    title = f"Buy Orders for {item_upper} by {buyer_name}"
-                elif buyer_name:
-                    title = f"Buy Orders by {buyer_name}"
-                elif buyer:
-                    title = f"Buy Orders by {buyer}"
+                title = "Market Sales"
+                if seller_name and item:
+                    title = f"Sales for {item_upper} by {seller_name}"
+                elif seller_name:
+                    title = f"Sales by {seller_name}"
+                elif seller:
+                    title = f"Sales by {seller}"
                 elif item:
-                    title = f"Buy Orders for {item_upper}"
+                    title = f"Sales for {item_upper}"
 
-                embed = discord.Embed(title=title, color=discord.Color.gold())
+                embed = discord.Embed(title=title, color=discord.Color.green())
                 
-                # If we're filtering by a specific buyer, set their head as the thumbnail
-                if buyer_name:
-                    embed.set_thumbnail(url=f"https://mc-heads.net/head/{buyer_name}")
-                    embed.set_author(name=f"{buyer_name}'s Buy Orders", icon_url=f"https://mc-heads.net/avatar/{buyer_name}/32")
+                # If we're filtering by a specific seller, set their head as the thumbnail
+                if seller_name:
+                    embed.set_thumbnail(url=f"https://mc-heads.net/head/{seller_name}")
+                    embed.set_author(name=f"{seller_name}'s Sales", icon_url=f"https://mc-heads.net/avatar/{seller_name}/32")
                 
                 # Handle case where no items were found
                 if not items:
                     embed.add_field(
                         name="No Items Found",
-                        value="No buy orders matching your criteria were found.",
+                        value="No sales matching your criteria were found.",
                         inline=False
                     )
                     return embed
@@ -468,8 +842,8 @@ async def buyorders(interaction: discord.Interaction, item: str = None, buyer: s
                     price = item_data.get("price", 0)
                     quantity = item_data.get("quantity", 0)
                     
-                    # If we're not already filtering by buyer, show the owner's name
-                    if not buyer and item_data.get("ownerId"):
+                    # If we're not already filtering by seller, show the owner's name
+                    if not seller and item_data.get("ownerId"):
                         owner_id = item_data["ownerId"]
                         # Use our lookup results
                         owner_name = seller_names.get(owner_id, "Unknown")
@@ -536,13 +910,12 @@ async def buyorders(interaction: discord.Interaction, item: str = None, buyer: s
             # Add buttons to view
             view.add_item(prev_page_button)
             view.add_item(next_page_button)
-            view.timeout = 60  # Set timeout to 60 seconds
 
             embed = await update_embed(current_page)
             await interaction.followup.send(embed=embed, view=view)
             
     except Exception as e:
-        logger.error(f"Error in buyorders command: {e}")
+        logger.error(f"Error in sales command: {e}")
         try:
             await interaction.followup.send("An error occurred while processing your request. Please try again later.")
         except:
