@@ -312,14 +312,16 @@ async def buyorders(interaction: discord.Interaction, item: str = None, buyer: s
             # Use the findByType endpoint
             next_url = f"https://api.lokamc.com/market_buyorders/search/findByType?type={item_upper}&size=100"
         else:
-            # Use the default endpoint for all items
-            next_url = "https://api.lokamc.com/market_buyorders?size=100"
+            # Use the default endpoint for all items - use larger size for unfiltered requests
+            next_url = "https://api.lokamc.com/market_buyorders?size=200"
         
         logger.info(f"Fetching buy orders from URL: {next_url}")
         
         # Process API responses
         retry_count = 0
         max_retries = 3
+        pages_retrieved = 0
+        total_pages = None
         
         try:
             while next_url and retry_count < max_retries:
@@ -328,11 +330,17 @@ async def buyorders(interaction: discord.Interaction, item: str = None, buyer: s
                         if response.status == 200:
                             # Reset retry counter on success
                             retry_count = 0
+                            pages_retrieved += 1
                             
                             data = await response.json()
                             
                             # Log the data structure to debug
                             logger.info(f"Response structure: {list(data.keys()) if isinstance(data, dict) else 'Not a dict'}")
+                            
+                            # Track total pages if we don't know it yet
+                            if total_pages is None and "page" in data:
+                                total_pages = data["page"].get("totalPages", 0)
+                                logger.info(f"Total pages reported by API: {total_pages}")
                             
                             # Check for both possible response structures
                             items_list = []
@@ -349,7 +357,7 @@ async def buyorders(interaction: discord.Interaction, item: str = None, buyer: s
                             page_info = data.get("page", {})
                             if page_info:
                                 logger.info(f"Page info: size={page_info.get('size')}, totalElements={page_info.get('totalElements')}, " +
-                                           f"totalPages={page_info.get('totalPages')}, number={page_info.get('number')}")
+                                           f"totalPages={page_info.get('totalPages')}, number={page_info.get('number')} of {total_pages}")
                             
                             # Process items from the current page
                             for item_data in items_list:
@@ -376,17 +384,54 @@ async def buyorders(interaction: discord.Interaction, item: str = None, buyer: s
                             logger.info(f"Available links: {list(links.keys())}")
                             if "next" in links:
                                 logger.info(f"Next link details: {links['next']}")
-                            
+                            else:
+                                logger.info("No 'next' link found in response")
+                                
+                            # Force maximum fetched pages if not filtering
+                            max_pages_to_fetch = 200  # Increased to handle hundreds of pages
+                            if not item and not buyer and pages_retrieved >= max_pages_to_fetch:
+                                logger.info(f"Reached maximum page fetch limit ({max_pages_to_fetch}) for unfiltered results")
+                                next_url = None
+                                break
+                                
+                            # Stop if we've collected enough items
+                            max_items = 2000  # Increased to show more items
+                            if len(all_items) >= max_items and (not item and not buyer):
+                                logger.info(f"Reached maximum items limit ({max_items}) for unfiltered results")
+                                next_url = None
+                                break
+                                
                             # Get next page URL if available - ensuring we don't miss any
                             next_link = None
                             if "_links" in data and "next" in data["_links"]:
                                 next_info = data["_links"]["next"]
                                 if isinstance(next_info, dict) and "href" in next_info:
                                     next_link = next_info["href"]
-                            
-                            if next_link and next_link.startswith("/"):
-                                next_url = f"https://api.lokamc.com{next_link}"
-                                logger.info(f"Next page URL: {next_url}")
+                                    
+                            if next_link:
+                                # Handle both relative and absolute URLs
+                                if next_link.startswith("/"):
+                                    next_url = f"https://api.lokamc.com{next_link}"
+                                elif next_link.startswith("http"):
+                                    next_url = next_link
+                                else:
+                                    next_url = f"https://api.lokamc.com/{next_link}"
+                                
+                                # Make sure we're requesting a large page size
+                                if "size=" in next_url:
+                                    # Replace the size parameter with our desired size
+                                    parts = next_url.split("size=")
+                                    if len(parts) > 1:
+                                        size_part = parts[1].split("&")[0]
+                                        next_url = next_url.replace(f"size={size_part}", "size=200")
+                                    else:
+                                        # Add size parameter if not present
+                                        next_url = next_url + ("&" if "?" in next_url else "?") + "size=200"
+                                        
+                                logger.info(f"Next page URL (modified): {next_url}")
+                                
+                                # Add a small delay between page requests to avoid rate limiting
+                                await asyncio.sleep(0.2)
                             else:
                                 logger.info("No next page found or reached the end")
                                 next_url = None
@@ -418,6 +463,9 @@ async def buyorders(interaction: discord.Interaction, item: str = None, buyer: s
         except Exception as e:
             logger.error(f"Unexpected error in buyorders command: {e}")
             await interaction.followup.send("An unexpected error occurred. Please try again later.")
+        
+        # Log pagination summary
+        logger.info(f"Pagination summary: Retrieved {pages_retrieved} pages of buyorders. Total items: {len(all_items)}")
         
         # After fetching all orders, no need to filter again as we already filtered during processing
         logger.info(f"Total buy orders found: {len(all_items)}")
@@ -639,8 +687,8 @@ async def sales(interaction: discord.Interaction, item: str = None, seller: str 
                 # Use the findByType endpoint
                 next_url = f"https://api.lokamc.com/market_sales/search/findByType?type={item_upper}&size=100"
             else:
-                # Use the default endpoint for all items
-                next_url = "https://api.lokamc.com/market_sales?size=100"
+                # Use the default endpoint for all items - use larger size for unfiltered requests
+                next_url = "https://api.lokamc.com/market_sales?size=200"
             
             logger.info(f"Fetching sales from URL: {next_url}")
             
@@ -650,6 +698,8 @@ async def sales(interaction: discord.Interaction, item: str = None, seller: str 
             # Process API responses
             retry_count = 0
             max_retries = 3
+            pages_retrieved = 0
+            total_pages = None
             
             try:
                 while next_url and retry_count < max_retries:
@@ -658,11 +708,17 @@ async def sales(interaction: discord.Interaction, item: str = None, seller: str 
                             if response.status == 200:
                                 # Reset retry counter on success
                                 retry_count = 0
+                                pages_retrieved += 1
                                 
                                 data = await response.json()
                                 
                                 # Log the data structure to debug
                                 logger.info(f"Response structure: {list(data.keys()) if isinstance(data, dict) else 'Not a dict'}")
+                                
+                                # Track total pages if we don't know it yet
+                                if total_pages is None and "page" in data:
+                                    total_pages = data["page"].get("totalPages", 0)
+                                    logger.info(f"Total pages reported by API: {total_pages}")
                                 
                                 # Check for both possible response structures
                                 items_list = []
@@ -679,7 +735,7 @@ async def sales(interaction: discord.Interaction, item: str = None, seller: str 
                                 page_info = data.get("page", {})
                                 if page_info:
                                     logger.info(f"Page info: size={page_info.get('size')}, totalElements={page_info.get('totalElements')}, " +
-                                               f"totalPages={page_info.get('totalPages')}, number={page_info.get('number')}")
+                                               f"totalPages={page_info.get('totalPages')}, number={page_info.get('number')} of {total_pages}")
                                     
                                 # Process items from the current page
                                 for item_data in items_list:
@@ -706,7 +762,23 @@ async def sales(interaction: discord.Interaction, item: str = None, seller: str 
                                 logger.info(f"Available links: {list(links.keys())}")
                                 if "next" in links:
                                     logger.info(f"Next link details: {links['next']}")
+                                else:
+                                    logger.info("No 'next' link found in response")
                                     
+                                # Force maximum fetched pages if not filtering
+                                max_pages_to_fetch = 200  # Increased to handle hundreds of pages
+                                if not item and not seller and pages_retrieved >= max_pages_to_fetch:
+                                    logger.info(f"Reached maximum page fetch limit ({max_pages_to_fetch}) for unfiltered results")
+                                    next_url = None
+                                    break
+                                    
+                                # Stop if we've collected enough items
+                                max_items = 2000  # Increased to show more items
+                                if len(all_items) >= max_items and (not item and not seller):
+                                    logger.info(f"Reached maximum items limit ({max_items}) for unfiltered results")
+                                    next_url = None
+                                    break
+                                
                                 # Get next page URL if available - ensuring we don't miss any
                                 next_link = None
                                 if "_links" in data and "next" in data["_links"]:
@@ -714,9 +786,30 @@ async def sales(interaction: discord.Interaction, item: str = None, seller: str 
                                     if isinstance(next_info, dict) and "href" in next_info:
                                         next_link = next_info["href"]
                                         
-                                if next_link and next_link.startswith("/"):
-                                    next_url = f"https://api.lokamc.com{next_link}"
-                                    logger.info(f"Next page URL: {next_url}")
+                                if next_link:
+                                    # Handle both relative and absolute URLs
+                                    if next_link.startswith("/"):
+                                        next_url = f"https://api.lokamc.com{next_link}"
+                                    elif next_link.startswith("http"):
+                                        next_url = next_link
+                                    else:
+                                        next_url = f"https://api.lokamc.com/{next_link}"
+                                    
+                                    # Make sure we're requesting a large page size
+                                    if "size=" in next_url:
+                                        # Replace the size parameter with our desired size
+                                        parts = next_url.split("size=")
+                                        if len(parts) > 1:
+                                            size_part = parts[1].split("&")[0]
+                                            next_url = next_url.replace(f"size={size_part}", "size=200")
+                                    else:
+                                        # Add size parameter if not present
+                                        next_url = next_url + ("&" if "?" in next_url else "?") + "size=200"
+                                        
+                                    logger.info(f"Next page URL (modified): {next_url}")
+                                    
+                                    # Add a small delay between page requests to avoid rate limiting
+                                    await asyncio.sleep(0.2)
                                 else:
                                     logger.info("No next page found or reached the end")
                                     next_url = None
@@ -748,6 +841,9 @@ async def sales(interaction: discord.Interaction, item: str = None, seller: str 
             except Exception as e:
                 logger.error(f"Unexpected error in sales command: {e}")
                 await interaction.followup.send("An unexpected error occurred. Please try again later.")
+            
+            # Log pagination summary
+            logger.info(f"Pagination summary: Retrieved {pages_retrieved} pages of sales. Total items: {len(all_items)}")
             
             # After fetching all orders, no need to filter again as we already filtered during processing
             logger.info(f"Total sales found: {len(all_items)}")
