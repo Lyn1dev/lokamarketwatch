@@ -156,11 +156,71 @@ class MyClient(discord.Client):
         self.player_cache = PlayerCache()
         self.bg_task = None
         
+        # User links storage
+        self.user_links_file = "user_links.json"
+        self.user_links = {}  # Maps Discord IDs to Loka player IDs
+        self.load_user_links()
+        
         # Cache configuration flags
         self.cache_enabled = True  # Re-enable the cache for seller lookups
         self.initial_update = False  # Don't update cache on startup
         self.background_updates = False  # Don't run hourly updates
         self.seller_lookup = True  # Enable seller name lookups
+
+    def load_user_links(self):
+        """Load user links from file"""
+        try:
+            if os.path.exists(self.user_links_file):
+                with open(self.user_links_file, 'r') as f:
+                    self.user_links = json.load(f)
+                logger.info(f"Loaded {len(self.user_links)} user links")
+            else:
+                logger.info("No user links file found, creating a new one")
+                self.user_links = {}
+                self.save_user_links()
+        except Exception as e:
+            logger.error(f"Error loading user links: {e}")
+            self.user_links = {}
+    
+    def save_user_links(self):
+        """Save user links to file"""
+        try:
+            with open(self.user_links_file, 'w') as f:
+                json.dump(self.user_links, f, indent=2)
+            logger.info(f"Saved {len(self.user_links)} user links")
+        except Exception as e:
+            logger.error(f"Error saving user links: {e}")
+            
+    async def is_user_linked(self, discord_id):
+        """Check if a Discord user is linked to a Loka player"""
+        return str(discord_id) in self.user_links
+        
+    async def get_linked_player(self, discord_id):
+        """Get the Loka player linked to a Discord user"""
+        player_id = self.user_links.get(str(discord_id))
+        if not player_id:
+            return None
+            
+        # Check if player is in cache
+        if player_id in self.player_cache.players:
+            return self.player_cache.players[player_id]
+            
+        # If not in cache, fetch from API
+        try:
+            async with aiohttp.ClientSession() as session:
+                player_url = f"https://api.lokamc.com/players/{player_id}"
+                async with session.get(player_url) as response:
+                    if response.status == 200:
+                        player = await response.json()
+                        # Update cache
+                        if self.cache_enabled and player and "id" in player:
+                            self.player_cache.players[player["id"]] = player
+                            self.player_cache.save_cache()
+                        return player
+        except Exception as e:
+            logger.error(f"Error fetching linked player {player_id}: {e}")
+            
+        return None
 
     async def setup_hook(self):
         # Load existing cache but skip updates based on configuration
@@ -255,7 +315,91 @@ async def on_ready():
 async def ping(interaction: discord.Interaction):
     await interaction.response.send_message("Pong!")
 
-# Active Sales Command
+@client.tree.command(name="link", description="Link your Discord account to your Loka Minecraft account")
+@app_commands.describe(
+    username="Your Loka Minecraft username"
+)
+async def link(interaction: discord.Interaction, username: str):
+    await interaction.response.defer(ephemeral=True)  # Use ephemeral to keep personal info private
+    
+    logger.info(f"Link request from {interaction.user.name} (ID: {interaction.user.id}) for username: {username}")
+    
+    # Check if the user is already linked
+    if await client.is_user_linked(interaction.user.id):
+        linked_player = await client.get_linked_player(interaction.user.id)
+        if linked_player and "name" in linked_player:
+            await interaction.followup.send(
+                f"Your Discord account is already linked to Loka player: **{linked_player['name']}**\n"
+                f"If you want to link to a different account, please contact an admin.",
+                ephemeral=True
+            )
+        else:
+            await interaction.followup.send(
+                "Your Discord account is already linked to a Loka player, but I couldn't retrieve their details.\n"
+                "If you want to link to a different account, please contact an admin.",
+                ephemeral=True
+            )
+        return
+    
+    # Search for the player
+    try:
+        player = await client.search_player_by_name(username)
+        
+        if not player:
+            await interaction.followup.send(
+                f"Could not find a Loka player with the username: **{username}**\n"
+                f"Please check your spelling and try again.",
+                ephemeral=True
+            )
+            return
+        
+        player_id = player.get("id")
+        player_name = player.get("name", username)
+        discord_id_from_api = player.get("discordId")
+        
+        if not player_id:
+            await interaction.followup.send(
+                f"Found player **{player_name}** but couldn't get their ID. Please try again later.",
+                ephemeral=True
+            )
+            return
+        
+        # Check if the player has a discordId
+        if not discord_id_from_api:
+            await interaction.followup.send(
+                f"Found player **{player_name}**, but they haven't linked their Discord account on Loka yet.\n"
+                f"Please link your Discord account in-game first, then try again!",
+                ephemeral=True
+            )
+            return
+        
+        # Verify that the Discord ID matches
+        user_discord_id = str(interaction.user.id)
+        if discord_id_from_api != user_discord_id:
+            await interaction.followup.send(
+                f"Found player **{player_name}**, but they're linked to a different Discord account.\n"
+                f"Please make sure you've linked your Discord account in-game with the correct Discord account.",
+                ephemeral=True
+            )
+            return
+        
+        # All checks passed, link the accounts
+        client.user_links[user_discord_id] = player_id
+        client.save_user_links()
+        
+        await interaction.followup.send(
+            f"Successfully linked your Discord account to Loka player: **{player_name}**\n"
+            f"You can now use personalized commands!",
+            ephemeral=True
+        )
+        
+    except Exception as e:
+        logger.error(f"Error in link command: {e}")
+        await interaction.followup.send(
+            "An error occurred while trying to link your account. Please try again later.",
+            ephemeral=True
+        )
+
 @client.tree.command(name="buyorders", description="Get market buy orders")
 @app_commands.describe(
     item="Item name to filter by (e.g., EMERALD, DIAMOND)",
@@ -1155,5 +1299,277 @@ async def sales(interaction: discord.Interaction, item: str = None, seller: str 
             await interaction.followup.send("An error occurred while processing your request. Please try again later.")
         except:
             pass  # If we can't send the error message, just log it
+
+@client.tree.command(name="completedsales", description="Lists recently completed sales from the Loka Market")
+@app_commands.describe(
+    item="Item type to filter by (optional)",
+    player="Player name to see their completed sales (optional)"
+)
+async def completed_sales(interaction: discord.Interaction, item: str = None, player: str = None):
+    await interaction.response.defer()
+    
+    logger.info(f"Completed sales requested by {interaction.user.name} with item: {item}, player: {player}")
+    
+    # Convert item to uppercase for comparison
+    item_upper = item.upper() if item else None
+    
+    # If player is specified, find their ID
+    player_id = None
+    player_name = None
+    
+    if player:
+        try:
+            logger.info(f"Searching for player: '{player}'")
+            found_player = await client.search_player_by_name(player)
+            
+            if found_player and isinstance(found_player, dict):
+                player_id = found_player.get("id")
+                player_name = found_player.get("name")
+                
+                if not player_id:
+                    logger.warning(f"Found player but ID is missing: {found_player}")
+                    await interaction.followup.send(f"Found player '{player}' but couldn't get their ID. Please try again.")
+                    return
+            else:
+                logger.warning(f"Could not find player with name '{player}'")
+                await interaction.followup.send(f"Could not find player with name '{player}'")
+                return
+        except Exception as e:
+            logger.error(f"Error looking up player '{player}': {e}")
+            await interaction.followup.send(f"Error looking up player '{player}'. Please try again.")
+            return
+    
+    # Get completed sales from API
+    all_items = []
+    
+    async with aiohttp.ClientSession() as session:
+        # Build the API URL based on filters
+        if player_id:
+            next_url = f"https://api.lokamc.com/market_completed_sales/search/findByOwnerId?id={player_id}&size=100"
+        else:
+            next_url = "https://api.lokamc.com/market_completed_sales/search/findAllSales?size=100"
+        
+        logger.info(f"Fetching completed sales from URL: {next_url}")
+        
+        # Process API response
+        try:
+            async with session.get(next_url) as response:
+                if response.status == 200:
+                    data = await response.json()
+                    
+                    # Log the data structure to debug
+                    logger.info(f"Response structure: {list(data.keys()) if isinstance(data, dict) else 'Not a dict'}")
+                    
+                    # Extract items from the response
+                    items_list = []
+                    if isinstance(data, dict) and "_embedded" in data:
+                        if "market_completed_sales" in data["_embedded"]:
+                            items_list = data["_embedded"]["market_completed_sales"]
+                            logger.info(f"Found {len(items_list)} completed sales")
+                    
+                    # Process each completed sale
+                    for item_data in items_list:
+                        # Skip if not valid item data
+                        if not item_data:
+                            continue
+                        
+                        material_type = item_data.get("type", "Unknown")
+                        
+                        # Apply item filter if specified
+                        if item_upper and material_type.upper() != item_upper:
+                            continue
+                        
+                        # Add to our list of items
+                        all_items.append({
+                            "id": item_data.get("id"),
+                            "material": material_type,
+                            "price": round(item_data.get("price", 0)),
+                            "quantity": item_data.get("quantity", 0),
+                            "seller_id": item_data.get("ownerId"),
+                            "buyer_id": item_data.get("buyerId"),
+                            "timestamp": item_data.get("timestamp", 0)
+                        })
+                    
+                    # Sort by most recent first (based on timestamp)
+                    all_items.sort(key=lambda x: x.get("timestamp", 0), reverse=True)
+                    
+                    logger.info(f"Processed {len(all_items)} completed sales matching filters")
+                else:
+                    logger.error(f"API request failed with status: {response.status}")
+                    await interaction.followup.send(f"API request failed with status: {response.status}")
+                    return
+        except Exception as e:
+            logger.error(f"Error fetching completed sales: {e}")
+            await interaction.followup.send("Failed to fetch completed sales data. Please try again later.")
+            return
+    
+    # Check if we found any sales
+    if not all_items:
+        if player_name and item:
+            await interaction.followup.send(f"No completed sales found for item '{item}' by player '{player_name}'")
+        elif player_name:
+            await interaction.followup.send(f"No completed sales found for player '{player_name}'")
+        elif item:
+            await interaction.followup.send(f"No completed sales found for item '{item}'")
+        else:
+            await interaction.followup.send("No completed sales found.")
+        return
+    
+    # Set up pagination
+    items_per_page = 10
+    num_pages = (len(all_items) + items_per_page - 1) // items_per_page
+    current_page = 0
+    
+    # Try to populate seller names if not filtered by player
+    seller_names = {}
+    seller_ids = set()
+    
+    if not player and client.seller_lookup:
+        for item_data in all_items:
+            seller_id = item_data.get("seller_id")
+            if seller_id:
+                seller_ids.add(seller_id)
+        
+        logger.info(f"Need to look up {len(seller_ids)} unique sellers")
+        
+        # First check cache for sellers we already know
+        for seller_id in list(seller_ids):
+            if seller_id in client.player_cache.players:
+                seller = client.player_cache.players[seller_id]
+                if seller and "name" in seller:
+                    seller_names[seller_id] = seller["name"]
+                    seller_ids.remove(seller_id)
+        
+        logger.info(f"Found {len(seller_names)} sellers in cache, {len(seller_ids)} still need lookup")
+        
+        # If we still have sellers to look up, only fetch a limited number to avoid rate limits
+        max_lookups = min(5, len(seller_ids))  # Limit to 5 seller lookups per command
+        if seller_ids and max_lookups > 0:
+            # Create a new session for seller lookups
+            async with aiohttp.ClientSession() as seller_session:
+                for seller_id in list(seller_ids)[:max_lookups]:
+                    try:
+                        player_url = f"https://api.lokamc.com/players/{seller_id}"
+                        async with seller_session.get(player_url) as player_response:
+                            if player_response.status == 200:
+                                seller_data = await player_response.json()
+                                if seller_data and "name" in seller_data:
+                                    seller_names[seller_id] = seller_data["name"]
+                                    # Add to cache for future use
+                                    client.player_cache.players[seller_id] = seller_data
+                                    # Save cache immediately to avoid losing this info
+                                    client.player_cache.save_cache()
+                    except Exception as e:
+                        logger.error(f"Error fetching player {seller_id}: {e}")
+                    # Add a small delay between requests
+                    await asyncio.sleep(0.5)
+    
+    async def update_embed(page: int):
+        start_index = page * items_per_page
+        end_index = min(start_index + items_per_page, len(all_items))
+        items = all_items[start_index:end_index]
+        
+        # Create appropriate title
+        title = "Completed Sales"
+        if player_name and item:
+            title = f"Completed Sales for {item_upper} by {player_name}"
+        elif player_name:
+            title = f"Completed Sales by {player_name}"
+        elif item:
+            title = f"Completed Sales for {item_upper}"
+        
+        embed = discord.Embed(title=title, color=discord.Color.blue())
+        
+        # If showing for a specific player, set their head as thumbnail
+        if player_name:
+            embed.set_thumbnail(url=f"https://mc-heads.net/head/{player_name}")
+        
+        # Handle case where no items were found
+        if not items:
+            embed.add_field(
+                name="No Sales Found",
+                value="No completed sales matching your criteria were found.",
+                inline=False
+            )
+            return embed
+        
+        # Add each completed sale to the embed
+        for item_data in items:
+            material = item_data.get("material", "Unknown")
+            price = item_data.get("price", 0)
+            quantity = item_data.get("quantity", 0)
+            
+            # Format timestamp if available
+            timestamp = item_data.get("timestamp", 0)
+            timestamp_str = "Unknown time"
+            if timestamp:
+                try:
+                    # Convert timestamp (usually in milliseconds) to readable format
+                    dt = datetime.fromtimestamp(timestamp / 1000)  # Convert ms to seconds
+                    timestamp_str = f"<t:{int(timestamp/1000)}:R>"
+                except Exception as e:
+                    logger.error(f"Error formatting timestamp: {e}")
+                    timestamp_str = "Unknown time"
+            
+            # Include seller name if available and not filtered by player
+            value = f"Price: {price}<:PowerShard:1356559399409422336> | Quantity: {quantity}"
+            if not player:
+                seller_id = item_data.get("seller_id")
+                seller_name = seller_names.get(seller_id, "Unknown")
+                if seller_name != "Unknown":
+                    value += f"\nSeller: **{seller_name}**"
+            
+            value += f"\nCompleted: {timestamp_str}"
+            
+            embed.add_field(
+                name=material,
+                value=value,
+                inline=False
+            )
+        
+        if len(all_items) > items_per_page:
+            embed.set_footer(text=f"Page {current_page + 1} of {num_pages}")
+        return embed
+    
+    async def button_callback(interaction: discord.Interaction, page_num: int):
+        nonlocal current_page
+        current_page = page_num
+        embed = await update_embed(current_page)
+        
+        # Update the buttons when page changes
+        prev_button_disabled = (current_page == 0)
+        next_button_disabled = (current_page >= num_pages - 1)
+        
+        # Recreate view with updated button states
+        view = discord.ui.View(timeout=60)
+        prev_button = discord.ui.Button(label="Previous", style=discord.ButtonStyle.secondary, disabled=prev_button_disabled)
+        next_button = discord.ui.Button(label="Next", style=discord.ButtonStyle.secondary, disabled=next_button_disabled)
+        
+        prev_button.callback = lambda i: button_callback(i, max(0, current_page - 1))
+        next_button.callback = lambda i: button_callback(i, min(num_pages - 1, current_page + 1))
+        
+        view.add_item(prev_button)
+        view.add_item(next_button)
+        
+        await interaction.response.edit_message(embed=embed, view=view)
+    
+    # Create initial buttons with proper disabled states
+    prev_button_disabled = (current_page == 0)
+    next_button_disabled = (current_page >= num_pages - 1)
+    
+    view = discord.ui.View(timeout=60)
+    prev_page_button = discord.ui.Button(label="Previous", style=discord.ButtonStyle.secondary, disabled=prev_button_disabled)
+    next_page_button = discord.ui.Button(label="Next", style=discord.ButtonStyle.secondary, disabled=next_button_disabled)
+    
+    prev_page_button.callback = lambda i: button_callback(i, max(0, current_page - 1))
+    next_page_button.callback = lambda i: button_callback(i, min(num_pages - 1, current_page + 1))
+    
+    # Add buttons to view
+    view.add_item(prev_page_button)
+    view.add_item(next_page_button)
+    view.timeout = 60  # Set timeout to 60 seconds
+    
+    embed = await update_embed(current_page)
+    await interaction.followup.send(embed=embed, view=view)
 
 client.run(os.getenv("BOT_TOKEN"))
